@@ -44,7 +44,7 @@ setup_requirements()
 {
 	local host=$1
 	echo "Setting up needed packages on $host"
-	tp $host "zypper install --no-confirm opensm infiniband-diags rdma-ndd libibverbs-utils srp_daemon fabtests"
+	tp $host "zypper install --no-confirm opensm infiniband-diags rdma-ndd libibverbs-utils srp_daemon fabtests mpitests-mvapich2"
 }
 
 setup_rdma_ndd()
@@ -202,6 +202,17 @@ setup_ssh()
 			  ssh-keyscan $remote_ip >> .ssh/known_hosts"
 }
 
+test_mpi()
+{
+	local flavor=$1
+	local host=$2
+	local ip1=$3
+	local ip2=$4
+
+	export RUN_ARGS="--host 192.168.0.1,192.168.0.2 -np 2"
+	tp $host -t 300 "VERBOSE=1 RUN_ARGS='--host $ip1,$ip2 -np 2' SHORT=1 /usr/lib64/mpi/gcc/$flavor/tests/runtests.sh"
+}
+
 juLog_fatal -name=setup_requirements "( setup_requirements $HOST1 && setup_requirements $HOST2)"
 juLog -name=kill_opensm "(
 	  tp $HOST1 'killall opensm; sleep 1; killall -9 opensm || true';
@@ -251,3 +262,4 @@ juLog -name=srq_pingpong "(
 juLog -name=nfs_over_rdma test_nfs $HOST1 $IP1 $HOST2
 juLog -name=ibsrpdm tp $HOST1 '/usr/sbin/ibsrpdm'
 juLog -name=fabtests test_libfabric $HOST1 $IP1 $IP2
+juLog -name=mpitests_mvapich2 test_mpi mvapich2 $HOST1 $IP1 $IP2
