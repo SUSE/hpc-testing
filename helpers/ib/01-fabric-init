@@ -8,7 +8,9 @@ setup_rdma_ndd()
 start_opensm()
 {
 	local host=$1
-	tp $host "opensm --daemon"
+	shift
+	# Extra args = openSM options
+	tp $host "opensm --daemon $*"
 }
 
 get_port()
