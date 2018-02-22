@@ -1,0 +1,48 @@
+_check_sm_lid()
+{
+	local host=$1
+	local expected_lid=$2
+
+	SM_LID=$(tpq $host1 sminfo | sed -e 's/.*sm lid \([0-9]\+\) sm guid.*/\1/')
+	if [ "$SM_LID" != "$expected_lid" ]; then
+		fatal "SM is on LID $SM_LID instead of $expected_lid"
+	fi
+}
+
+test_sm_failover()
+{
+	local host1=$1
+	local lid1=$2
+	local host2=$3
+	local lid2=$4
+
+	# Kill any SM just in case
+	kill_opensm $host1
+	kill_opensm $host2
+
+	start_opensm $host1 -p 1
+	sleep 1
+
+	_check_sm_lid $host1 $lid1
+	_check_sm_lid $host2 $lid1
+
+	#Run a bunch of time to make sure it really works
+	for iter in $(seq 1 5); do
+		echo "Migration test $iter"
+		start_opensm $host2 -p 10
+		# Leave some time for the migration to work
+		sleep 3
+
+		_check_sm_lid $host1 $lid2
+		_check_sm_lid $host2 $lid2
+
+		echo "Failover test $iter"
+		# Kill SM on H2
+		kill_opensm $host2
+		# Leave time for the fail over
+		sleep 10
+
+		_check_sm_lid $host1 $lid1
+		_check_sm_lid $host2 $lid1
+	done
+}

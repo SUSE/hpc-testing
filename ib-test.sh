@@ -107,7 +107,7 @@ run_phase 2 phase_2 "IPoIB"
 #
 #########################
 phase_3(){
-	true
+	juLog -name=test_sm_failover "test_sm_failover $HOST1 $LID1 $HOST2 $LID2"
 }
 run_phase 3 phase_3 "SM Failover"
 
