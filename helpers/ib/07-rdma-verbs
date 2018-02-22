@@ -1,0 +1,18 @@
+test_ibv_pingpong()
+{
+	local testname=$1
+
+	local host1=$2
+	local hca1=$3
+	local ibport1=$4
+
+	local host2=$5
+	local hca2=$6
+	local ibport2=$7
+
+	tp $host2 "$testname -d $hca2 -i $ibport2" &
+	sleep 1
+	tp $host1 "$testname -d $hca1 -i $ibport1 $host2"
+
+	wait
+}

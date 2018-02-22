@@ -1,0 +1,9 @@
+test_libfabric()
+{
+	local host=$1
+	local server_ip=$2
+	local client_ip=$3
+	# Ignore fi_rdm_shared_av which is broken upstream
+	tp $host -t 300 "/usr/bin/runfabtests.sh -e fi_rma_bw -v  verbs $server_ip $client_ip"
+}
+

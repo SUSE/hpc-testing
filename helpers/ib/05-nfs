@@ -1,0 +1,34 @@
+test_nfs()
+{
+	local server=$1
+	local server_ip=$2
+	local client=$3
+
+	tp $client "! (mount | grep /tmp/RAM) || umount -f /tmp/RAM"
+
+	tp $server "exportfs -u -a &&
+	   		   systemctl stop nfs-server &&
+			   (! (mount | grep /tmp/RAM) || umount -f /tmp/RAM) &&
+			   mkdir -p /tmp/RAM && mount -t tmpfs -o size=2G tmpfs /tmp/RAM &&
+			   echo '/tmp/RAM   192.168.0.0/255.255.255.0(fsid=0,rw,async,insecure,no_root_squash)'> /etc/exports &&
+			   systemctl start nfs-server &&
+			   modprobe svcrdma &&
+			   echo 'rdma 20049' > /proc/fs/nfsd/portlist &&
+	   		   exportfs -a &&
+			   dd if=/dev/urandom bs=1M count=64 of=/tmp/RAM/input"
+
+	tp $client "modprobe xprtrdma &&
+	   		   mkdir -p /tmp/RAM &&
+			   mount -o rdma,port=20049 $server_ip:/tmp/RAM /tmp/RAM &&
+			   (cat /proc/mounts | grep /tmp/RAM  | grep proto=rdma) &&
+			   dd if=/tmp/RAM/input bs=1M count=1024 of=/tmp/RAM/output &&
+			   diff -q /tmp/RAM/input /tmp/RAM/output"
+	tp $server "diff -q /tmp/RAM/input /tmp/RAM/output"
+
+	# Cleanup
+	tp $client "umount -f /tmp/RAM"
+	tp $server "exportfs -u -a &&
+	   		   systemctl stop nfs-server &&
+			   umount -f /tmp/RAM &&
+			   echo > /etc/exports"
+}

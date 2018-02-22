@@ -26,3 +26,14 @@ tpq()
 	twopence_command -b $host "$@"
 	set +e
 }
+
+load_helpers()
+{
+	local topdir=$1
+	local test_type=$2
+
+	source ${topdir}/julog.sh
+	for helper in $(ls ${topdir}/helpers/${test_type}/[0-9][0-9]*); do
+		source ${helper}
+	done
+}

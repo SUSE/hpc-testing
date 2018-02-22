@@ -1,0 +1,82 @@
+setup_rdma_ndd()
+{
+	local host=$1
+	tp $host 'systemctl status rdma-ndd ||
+	   		  (systemctl start rdma-ndd && systemctl status rdma-ndd)'
+}
+
+start_opensm()
+{
+	local host=$1
+	tp $host "opensm --daemon"
+}
+
+get_port()
+{
+	local host=$1
+	local host_id=$2
+
+	local boards=$(tpq $host '/usr/sbin/ibstat -l')
+	local ip_count=0
+	for board in $boards; do
+		local port_count=$(tpq $host "/usr/sbin/ibstat $board -p" | wc -l)
+		for port in $(seq 1 $port_count); do
+			res=$(tpq $host "/usr/sbin/ibstat $board $port")
+			status=$(echo "$res" | grep "State:" | awk '{print $NF}')
+			if [ "$status" == "Active" ]; then
+				guid=$(echo "$res" | grep "Port GUID:" | awk '{print $NF}')
+				lid=$(echo "$res" | grep "Base lid:" | awk '{print $NF}')
+				echo "[SUCCESS] Host $host uses interface ib$ip_count."\
+					 " Board=$board Port=$port GUID=$guid LID=$lid"
+				eval export IPPORT$host_id=ib$ip_count
+				eval export GUID$host_id=$guid
+				eval export LID$host_id=$lid
+				eval export HCA$host_id=$board
+				eval export IBPORT$host_id=$port
+
+				return
+			fi
+			ip_count=$(expr $ip_count + 1)
+		done
+	done
+	fatal_error "Failed to find an active port on $host"
+}
+
+setup_ssh()
+{
+	local host=$1
+	local remote_ip=$2
+
+	# Make sure we accepted the remote SSH key so MPI can work
+	tp $host "touch .ssh/known_hosts &&
+	   		  sed -i '/^$remote_ip /d' .ssh/known_hosts &&
+			  ssh-keyscan $remote_ip >> .ssh/known_hosts"
+}
+
+test_ibdiagnet()
+{
+	local host=$1
+	tp $HOST1 rm -f topo.out
+	tp $HOST1 ibdiagnet -wt topo.out
+	tp $HOST1 ibdiagnet -pc
+	sleep 17
+	tp $HOST1 ibdiagnet -c 1000
+
+#   We should check the against the topo file
+#   But I cannot figure out how to know which of the system name is ours
+#	tp $HOST1 ibdiagnet -t topo2.out
+}
+
+# Check bsc#972725
+test_nodedesc()
+{
+	local host=$1
+	local guid=$2
+
+	node_desc=$(tpq $host "smpquery -G NodeDesc $guid" | \
+					sed -e 's/^Node Description:\.*//' | awk '{ print $1}')
+	rhostname=$(tpq $host "hostname -s")
+	if [ "$node_desc" != "$rhostname" ]; then
+		fatal_error "Missing or bad hostname in node description" >&2
+	fi
+}

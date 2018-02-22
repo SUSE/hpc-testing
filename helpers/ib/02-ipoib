@@ -1,0 +1,52 @@
+set_ipoib_mode()
+{
+	local host=$1
+	local port=$2
+	local mode=$3
+
+	tp $host "echo $mode > /sys/class/net/$port/mode"
+	R_MODE=$(tpq $host "cat /sys/class/net/$port/mode")
+	if [ "$R_MODE" != "$mode" ]; then
+		fatal_error "Failed to set IPoIB mode"
+	fi
+}
+set_ipoib_up()
+{
+	local host=$1
+	local port=$2
+	local ipaddr=$3 #ip/netmask
+
+	tp $host "ip link set dev $port up &&
+			  ip addr add $ipaddr dev $port"
+}
+set_ipoib_down()
+{
+	local host=$1
+	local port=$2
+
+	tp $host "ip link set dev $port down &&
+	   		  ip addr flush $port"
+}
+
+test_ping()
+{
+	local host=$1
+	local remote_addr=$2
+	local pkt_size=$3
+
+	tp $host "ip neigh flush $remote_addr"
+	tp $host "ping -i 0.2 -t 3 -c 100 -s $pkt_size $remote_addr"
+}
+
+test_sftp()
+{
+	local host=$1
+	local remote_addr=$2
+
+	# Generate a random file
+	tp $host "rm -f sftp.orig && dd if=/dev/urandom bs=1M count=64 of=sftp.orig"
+	# Copy back and forth
+	tp $host "scp sftp.orig $remote_addr:sftp.orig && scp $remote_addr:sftp.orig sftp.copy"
+	# Check file
+	tp $host "diff -q sftp.orig sftp.copy"
+}

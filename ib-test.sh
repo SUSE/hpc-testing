@@ -1,15 +1,13 @@
 #!/bin/bash
 
-source $(dirname $0)/julog.sh
+source $(dirname $0)/helpers/common.sh
+load_helpers $(dirname $0) "ib"
 
 if [ $# -ne 2 ]; then
 	fatal_error "Usage $0 host1 host2" >&2
 fi
 export HOST1=$1
 export HOST2=$2
-
-source $(dirname $0)/common-helpers.sh
-source $(dirname $0)/ib-test-helpers.sh
 
 #########################
 #

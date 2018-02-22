@@ -53,15 +53,11 @@ QA test suite for Infiniband and OmniPath validation
 
 %install
 install -D -m 0755 ib-test.sh %{buildroot}/%{_datadir}/%{name}/ib-test.sh
-install -D -m 0644 ib-test-helpers.sh %{buildroot}/%{_datadir}/%{name}/ib-test-helpers.sh
-install -D -m 0644 common-helpers.sh %{buildroot}/%{_datadir}/%{name}/common-helpers.sh
-install -D -m 0644 julog.sh %{buildroot}/%{_datadir}/%{name}/julog.sh
+cp -R helpers %{buildroot}/%{_datadir}/%{name}/
 
 %files
 %dir %{_datadir}/%{name}
 %{_datadir}/%{name}/ib-test.sh
-%{_datadir}/%{name}/ib-test-helpers.sh
-%{_datadir}/%{name}/common-helpers.sh
-%{_datadir}/%{name}/julog.sh
+%{_datadir}/%{name}/helpers
 
 %changelog
