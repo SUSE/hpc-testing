@@ -22,7 +22,7 @@ Version:        0.1
 Release:        0
 Summary:        Test scripts to validate HPC packages
 License:        GPL-3.0
-Group:          Development/Tools/Version
+Group:          Development/Tools/Other
 Url:            https://github.com/nmorey/git-sequencer-status
 Source:         %{name}-%{version}%{git_ver}.tar.bz2
 Requires:       libibverbs
@@ -53,9 +53,9 @@ QA test suite for Infiniband and OmniPath validation
 
 %install
 install -D -m 0755 ib-test.sh %{buildroot}/%{_datadir}/%{name}/ib-test.sh
-install -D -m 0644 ib-test-helpers.sh %{buildroot}/%{_datadir}/%{name}/ib-test.sh
-install -D -m 0644 common-helpers.sh %{buildroot}/%{_datadir}/%{name}/ib-test.sh
-install -D -m 0755 julog.sh %{buildroot}/%{_datadir}/%{name}/julog.sh
+install -D -m 0644 ib-test-helpers.sh %{buildroot}/%{_datadir}/%{name}/ib-test-helpers.sh
+install -D -m 0644 common-helpers.sh %{buildroot}/%{_datadir}/%{name}/common-helpers.sh
+install -D -m 0644 julog.sh %{buildroot}/%{_datadir}/%{name}/julog.sh
 
 %files
 %dir %{_datadir}/%{name}
