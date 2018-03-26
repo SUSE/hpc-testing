@@ -59,8 +59,8 @@ get_port $HOST1 1
 get_port $HOST2 2
 
 phase_1_2(){
-	juLog_fatal -name=h1_ip_setup   "set_ipoib_up $HOST1 $IPPORT1 $IP1/24"
-	juLog_fatal -name=h1_ip_setup   "set_ipoib_up $HOST2 $IPPORT2 $IP2/24"
+	juLog_fatal -name=h1_ip_setup   "set_ipoib_down $HOST1 $IPPORT1; set_ipoib_up $HOST1 $IPPORT1 $IP1/24"
+	juLog_fatal -name=h1_ip_setup   "set_ipoib_down $HOST2 $IPPORT2; set_ipoib_up $HOST2 $IPPORT2 $IP2/24"
 	juLog_fatal -name=h1_setup_ssh_keys "setup_ssh $HOST1 $IP2"
 	juLog_fatal -name=h2_setup_ssh_keys "setup_ssh $HOST2 $IP1"
 
