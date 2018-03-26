@@ -4,7 +4,16 @@ test_mpi()
 	local host=$2
 	local ip1=$3
 	local ip2=$4
+	export RUN_ARGS=""
 
-	export RUN_ARGS="--host 192.168.0.1,192.168.0.2 -np 2"
-	tp $host -t 300 "VERBOSE=1 RUN_ARGS='--host $ip1,$ip2 -np 2' SHORT=1 /usr/lib64/mpi/gcc/$flavor/tests/runtests.sh"
+	case $flavor in
+		openmpi|openmpi2)
+			RUN_ARGS="${RUN_ARGS} --allow-run-as-root"
+			;;
+		openmpi3*)
+			RUN_ARGS="${RUN_ARGS}  --allow-run-as-root --oversubscribe"
+			;;
+	esac
+	RUN_ARGS="--host $ip1,$ip2 -np 2 ${RUN_ARGS}"
+	tp $host -t 300 "VERBOSE=1 RUN_ARGS='$RUN_ARGS' SHORT=1 /usr/lib64/mpi/gcc/$flavor/tests/runtests.sh"
 }
