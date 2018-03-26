@@ -135,7 +135,7 @@ phase_1_2(){
 	juLog_fatal -name=h2_ip_setup   "set_ipoib_down $HOST2 $IPPORT2; set_ipoib_up $HOST2 $IPPORT2 $IP2/24"
 
 	# Let IP settle down or SSH key setup might fail
-	sleep 2
+	sleep 5
 
 	juLog_fatal -name=h1_setup_ssh_keys "setup_ssh $HOST1 $IP2"
 	juLog_fatal -name=h2_setup_ssh_keys "setup_ssh $HOST2 $IP1"
