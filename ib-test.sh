@@ -233,7 +233,7 @@ run_phase 7 phase_7 "RDMA/Verbs"
 #
 #########################
 phase_8(){
-	for flavour in $MPI_FLAVOURS; do
+	for flavour in $(echo MPI_FLAVOURS | sed -e 's/,/ /g'); do
 		juLog -name=mpitests_${flavour} test_mpi ${flavour} $HOST1 $IP1 $IP2
 	done
 }
