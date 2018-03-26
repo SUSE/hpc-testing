@@ -1,0 +1,47 @@
+test_srp()
+{
+	local srp_server=$1
+	local server_guid=$2
+	local server_wwn="fe80000000000000$(echo $server_guid| sed -e 's/0x//')"
+	local server_board=$3
+	local server_port=$4
+
+	local client=$5
+	local client_guid=$6
+	local client_wwn="0000000000000000$(echo $client_guid| sed -e 's/0x//')"
+	local client_board=$7
+	local client_port=$8
+
+	# Cleanup old stuff
+	tp $client 'rmmod ib_srp || true'
+	tp $srp_server "umount /tmp/hpc-test.mount || true;
+	   			   	targetcli /backstores/fileio/ delete name=hpc-test || true;
+                    targetcli /ib_srpt delete 0x$server_wwn || true;
+					rm -Rf /tmp/hpc-test.io /tmp/hpc-test.mount &&
+					modprobe ib_srpt &&
+					targetcli /backstores/fileio create name=hpc-test file_or_dev=/tmp/hpc-test.io size=256M &&
+					targetcli /ib_srpt create 0x$server_wwn &&
+					targetcli /ib_srpt/0x$server_wwn/luns create /backstores/fileio/hpc-test &&
+					targetcli /ib_srpt/0x$server_wwn/acls create 0x$client_wwn &&
+					mkfs -t ext3 /tmp/hpc-test.io &&
+					mkdir /tmp/hpc-test.mount && 
+					mount -o loop /tmp/hpc-test.io /tmp/hpc-test.mount &&
+					dd if=/dev/urandom bs=1M count=64 of=/tmp/hpc-test.mount/input &&
+					umount /tmp/hpc-test.mount"
+	tp $client 'umount /tmp/srp-hpc-test || true;
+	   		    rm -Rf /tmp/srp-hpc-test || true;
+				modprobe ib_srp &&
+				mkdir /tmp/srp-hpc-test &&
+				ibsrpdm -c | grep "dgid='$server_wwn'" >
+						 /sys/class/infiniband_srp/srp-$client_board-$client_port/add_target &&
+				block_device=$(ls /sys/class/infiniband/$client_board/device/host*/target*/*:*/block) &&
+				mount /dev/$block_device /tmp/srp-hpc-test &&
+				cp -R /tmp/srp-hpc-test/input /tmp/srp-hpc-test/output &&
+				diff -q /tmp/srp-hpc-test/input /tmp/srp-hpc-test/output&&
+				umount /tmp/srp-hpc-test &&
+				rmmod ib_srp
+	 '
+	tp $srp_server "mount -o loop /tmp/hpc-test.io /tmp/hpc-test.mount &&
+					diff -q /tmp/hpc-test.mount/input /tmp/hpc-test.mount/output &&
+					umount /tmp/hpc-test.mount"
+}
