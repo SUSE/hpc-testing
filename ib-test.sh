@@ -1,18 +1,71 @@
 #!/bin/bash
 
-export START_PHASE=${START_PHASE:-0}
-export END_PHASE=${END_PHASE:-999}
-export MPI_FLAVOURS=${MPI_FLAVOURS:-"mvapich2 mpich openmpi openmpi2"}
+DEFAULT_START_PHASE=0
+DEFAULT_END_PHASE=999
+DEFAULT_IP1=192.168.0.1
+DEFAULT_IP2=192.168.0.2
+DEFAULT_MPI_FLAVOURS="mvapich2,mpich,openmpi,openmpi2"
+
+export START_PHASE=${START_PHASE:-$DEFAULT_START_PHASE}
+export END_PHASE=${END_PHASE:-$DEFAULT_END_PHASE}
+export MPI_FLAVOURS=${MPI_FLAVOURS:-$DEFAULT_MPI_FLAVOURS}
+export IP1=${IP1:-$DEFAULT_IP1}
+export IP2=${IP2:-$DEFAULT_IP2}
+
+
 source $(dirname $0)/helpers/common.sh
 load_helpers $(dirname $0) "ib"
 
+usage(){
+	echo "Usage: ${0} [options] <host1> <host2>"
+	echo "Options:"
+	echo "  -h, --help                 Display usage"
+	echo "  -s, --start-phase          Phase to start from (default is $DEFAULT_START_PHASE)"
+	echo "  -e, --end-phase            Phase to stop at (default is $DEFAULT_END_PHASE)"
+	echo "  -v, --verbose              Display test logs in console."
+	echo "      --ip1 <ip>             IP for IPoIB on host1 (default is $DEFAULT_IP1)"
+	echo "      --ip2 <ip>             IP for IPoIB on host2 (default is $DEFAULT_IP2)"
+	echo "  -M, --mpi <mpi>[,<mpi>...] Comma separated list of MPI flavours to test (default is $DEFAULT_MPI_FLAVOURS)"
+}
+
+while [ $# -ne 2 ]; do
+	case $1 in
+		-s|--start-phase)
+			START_PHASE=$2
+			shift
+			;;
+		-e|--end-phase)
+			END_PHASE=$2
+			shift
+			;;
+		-v|--verbose)
+			VERBOSE=1
+			;;
+		--ip1)
+			IP1=$2
+			shift
+			;;
+		--ip2)
+			IP2=$2
+			shift
+			;;
+		-M|--mpi)
+			MPI_FLAVOURS=$2
+			shift
+			;;
+		--help|-h)
+			usage $0
+			exit 1
+			;;
+	esac
+	shift
+done
 if [ $# -ne 2 ]; then
-	fatal_error "Usage $0 host1 host2" >&2
+	usage $0
+	fatal_error "Missing host names"
 fi
 export HOST1=$1
 export HOST2=$2
-export IP1=192.168.0.1
-export IP2=192.168.0.2
 
 #########################
 #
