@@ -6,11 +6,12 @@ test_nfs()
 
 	tp $client "! (mount | grep /tmp/RAM) || umount -f /tmp/RAM"
 
+	subnet=$(echo $server_ip | sed -e 's/\.[0-9]\+$/.0/')
 	tp $server "exportfs -u -a &&
 	   		   systemctl stop nfs-server &&
 			   (! (mount | grep /tmp/RAM) || umount -f /tmp/RAM) &&
 			   mkdir -p /tmp/RAM && mount -t tmpfs -o size=2G tmpfs /tmp/RAM &&
-			   echo '/tmp/RAM   192.168.0.0/255.255.255.0(fsid=0,rw,async,insecure,no_root_squash)'> /etc/exports &&
+			   echo '/tmp/RAM   $subnet/255.255.255.0(fsid=0,rw,async,insecure,no_root_squash)'> /etc/exports &&
 			   systemctl start nfs-server &&
 			   modprobe svcrdma &&
 			   echo 'rdma 20049' > /proc/fs/nfsd/portlist &&
