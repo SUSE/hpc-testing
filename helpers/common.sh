@@ -9,22 +9,65 @@ fatal_error()
 	exit 1
 }
 
+tp_check_local()
+{
+	local host=$1
+	local varname=IS_LOCAL_$(echo $host | tr '.' '_')
+
+	# Check if the IP is local and store the value
+	if [ "${!varname}" == "" ]; then
+		export ${varname}=1
+		IP_LIST=$(ip addr show | grep inet  | grep -v inet6 | sed -e 's/.*inet \([0-9.]*\)\/\?.*$/\1/')
+		for ip in $IP_LIST; do
+			if [ "$ip" == "$host" ]; then
+				export ${varname}=0
+				break
+			fi
+		done
+	fi
+	return ${!varname}
+}
+
 tp()
 {
-	local host="ssh:$1"
+	local ip=$1
+	local host="ssh:$ip"
 	shift
-	echo "twopence_command -b $host $@"
-	set -e
-	twopence_command -b $host "$@"
-	set +e
+
+	if tp_check_local $ip; then
+		echo "$@"
+		set -e
+		(
+			cd $HOME;
+			eval $@
+		)
+		set +e
+	else
+		echo "twopence_command -b $host $@"
+		set -e
+		twopence_command -b $host "$@"
+		set +e
+	fi
 }
+
 tpq()
 {
-	local host="ssh:$1"
+	local ip=$1
+	local host="ssh:$ip"
 	shift
-	set -e
-	twopence_command -b $host "$@"
-	set +e
+
+	if tp_check_local $ip; then
+		set -e
+		(
+			cd $HOME;
+			eval $@
+		)
+		set +e
+	else
+		set -e
+		twopence_command -b $host "$@"
+		set +e
+	fi
 }
 
 load_helpers()
