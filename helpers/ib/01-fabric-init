@@ -56,11 +56,11 @@ setup_ssh()
 test_ibdiagnet()
 {
 	local host=$1
-	tp $HOST1 rm -f topo.out
-	tp $HOST1 ibdiagnet -wt topo.out
-	tp $HOST1 ibdiagnet -pc
+	tp $HOST1 'rm -f topo.out'
+	tp $HOST1 'ibdiagnet -wt topo.out'
+	tp $HOST1 'ibdiagnet -pc'
 	sleep 17
-	tp $HOST1 ibdiagnet -c 1000
+	tp $HOST1 'ibdiagnet -c 1000'
 
 #   We should check the against the topo file
 #   But I cannot figure out how to know which of the system name is ours
