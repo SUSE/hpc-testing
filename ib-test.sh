@@ -11,6 +11,8 @@ export END_PHASE=${END_PHASE:-$DEFAULT_END_PHASE}
 export MPI_FLAVOURS=${MPI_FLAVOURS:-$DEFAULT_MPI_FLAVOURS}
 export IP1=${IP1:-$DEFAULT_IP1}
 export IP2=${IP2:-$DEFAULT_IP2}
+export HOST1=
+export HOST2=
 
 
 source $(dirname $0)/helpers/common.sh
@@ -28,7 +30,7 @@ usage(){
 	echo "  -M, --mpi <mpi>[,<mpi>...] Comma separated list of MPI flavours to test (default is $DEFAULT_MPI_FLAVOURS)"
 }
 
-while [ $# -ne 2 ]; do
+while [ $# -ne 0 ]; do
 	case $1 in
 		-s|--start-phase)
 			START_PHASE=$2
@@ -57,15 +59,25 @@ while [ $# -ne 2 ]; do
 			usage $0
 			exit 1
 			;;
+		[0-9]*.[0-9]*.[0-9]*.[0-9]*)
+			if [ "$HOST1" == "" ]; then
+				HOST1=$1
+			elif [ "$HOST2" == "" ]; then
+				HOST2=$1
+			else
+				fatal_error "Too many host ip provided '$2'"
+			fi
+			;;
+		*)
+			fatal_error "Unknow argument $1"
+			;;
 	esac
 	shift
 done
-if [ $# -ne 2 ]; then
+if [ "$HOST1" == "" -o "$HOST2" == "" ]; then
 	usage $0
 	fatal_error "Missing host names"
 fi
-export HOST1=$1
-export HOST2=$2
 
 #########################
 #
