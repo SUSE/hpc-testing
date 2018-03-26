@@ -35,7 +35,7 @@ test_ping()
 	local pkt_size=$3
 
 	tp $host "ip neigh flush $remote_addr"
-	tp $host "ping -i 0.2 -t 3 -c 100 -s $pkt_size $remote_addr"
+	tp $host "ping -i 0.01 -t 3 -c 100 -s $pkt_size $remote_addr"
 }
 
 test_sftp()
