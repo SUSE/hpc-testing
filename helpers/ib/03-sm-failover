@@ -30,7 +30,7 @@ test_sm_failover()
 	kill_opensm $host2
 
 	start_opensm $host1 -p 1
-	sleep 1
+	sleep 5
 
 	_check_sm_lid $host1 $lid1
 	_check_sm_lid $host2 $lid1
@@ -40,7 +40,7 @@ test_sm_failover()
 		echo "Migration test $iter"
 		start_opensm $host2 -p 10
 		# Leave some time for the migration to work
-		sleep 3
+		sleep 20
 
 		_check_sm_lid $host1 $lid2
 		_check_sm_lid $host2 $lid2
@@ -49,7 +49,7 @@ test_sm_failover()
 		# Kill SM on H2
 		kill_opensm $host2
 		# Leave time for the fail over
-		sleep 10
+		sleep 20
 
 		_check_sm_lid $host1 $lid1
 		_check_sm_lid $host2 $lid1
