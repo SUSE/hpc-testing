@@ -14,6 +14,7 @@ test_ibv_pingpong()
 	# Do a random sleep on the remote host so in case SSH is very slow we don't have
 	# hardcoded sleep value
 	tp $host2 "sleep 2"
+	sleep 2
 	tp $host1 "$testname -d $hca1 -i $ibport1 $host2"
 
 	wait
