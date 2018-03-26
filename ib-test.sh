@@ -2,7 +2,7 @@
 
 export START_PHASE=${START_PHASE:-0}
 export END_PHASE=${END_PHASE:-999}
-
+export MPI_FLAVOURS=${MPI_FLAVOURS:-"mvapich2 mpich openmpi openmpi2"}
 source $(dirname $0)/helpers/common.sh
 load_helpers $(dirname $0) "ib"
 
@@ -162,7 +162,7 @@ run_phase 7 phase_7 "RDMA/Verbs"
 #
 #########################
 phase_8(){
-	for flavour in mvapich2 mpich openmpi openmpi2; do
+	for flavour in $MPI_FLAVOURS; do
 		juLog -name=mpitests_${flavour} test_mpi ${flavour} $HOST1 $IP1 $IP2
 	done
 }
