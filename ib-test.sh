@@ -120,9 +120,9 @@ phase_1_1(){
 
 	# We need to sleep a little bit here in case the port are stil reseting from pahse 0
 	sleep 1
-	juLog_fatal -name=h1_openSM_start "start_opensm $HOST1"
+	juLog_fatal -name=h1_openSM_start "start_opensm $HOST1 -p 10"
 	# Leave some time for openSM to bring the link up
-	sleep 5
+	sleep 10
 }
 run_phase 1 phase_1_1 "Fabric init (1/2)"
 

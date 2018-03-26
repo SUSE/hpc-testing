@@ -33,7 +33,7 @@ test_sm_failover()
 	for host in $host1 $host2; do
 		tp $host 'echo -e "sminfo_polling_timeout 2000\npolling_retry_number 2" > hpc-testing-opensm.conf'
 	done
-	start_opensm $host1 -p 1 -F hpc-testing-opensm.conf
+	start_opensm $host1 -p 5 -F hpc-testing-opensm.conf
 	sleep 5
 
 	_check_sm_lid $host1 $lid1
