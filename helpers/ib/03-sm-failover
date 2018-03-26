@@ -8,7 +8,7 @@ _check_sm_lid()
 		if [ "$SM_LID" == "sminfo: iberror: failed: query" ]; then
 			#New SM is still not up
 			echo "SM still not up... Waiting a bit more .."
-			sleep 10
+			sleep 2
 			continue
 		fi
 		if [ "$SM_LID" != "$expected_lid" ]; then
@@ -29,7 +29,11 @@ test_sm_failover()
 	kill_opensm $host1
 	kill_opensm $host2
 
-	start_opensm $host1 -p 1
+	# Generate configuration files to reduce fail over delays
+	for host in $host1 $host2; do
+		tp $host 'echo -e "sminfo_polling_timeout 2000\npolling_retry_number 2" > hpc-testing-opensm.conf'
+	done
+	start_opensm $host1 -p 1 -F hpc-testing-opensm.conf
 	sleep 5
 
 	_check_sm_lid $host1 $lid1
@@ -38,9 +42,9 @@ test_sm_failover()
 	#Run a bunch of time to make sure it really works
 	for iter in $(seq 1 5); do
 		echo "Migration test $iter"
-		start_opensm $host2 -p 10
+		start_opensm $host2 -p 10 -F hpc-testing-opensm.conf
 		# Leave some time for the migration to work
-		sleep 20
+		sleep 5
 
 		_check_sm_lid $host1 $lid2
 		_check_sm_lid $host2 $lid2
@@ -49,7 +53,7 @@ test_sm_failover()
 		# Kill SM on H2
 		kill_opensm $host2
 		# Leave time for the fail over
-		sleep 20
+		sleep 5
 
 		_check_sm_lid $host1 $lid1
 		_check_sm_lid $host2 $lid1
