@@ -79,7 +79,11 @@ juLog() {
   echo "+++ working dir: "`pwd`   | tee -a $outf
   echo "+++ command: $cmd"        | tee -a $outf
   ini=`date +%s.%N`
-  eVal "$cmd" >> $outf 2>&1
+  if [ "$VERBOSE" != "" ]; then
+	  eVal "$cmd" 2>&1 | tee -a $outf
+  else
+	  eVal "$cmd" >> $outf 2>&1
+  fi
   evErr=`cat $errfile`
   rm -f $errfile
   end=`date +%s.%N`
