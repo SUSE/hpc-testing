@@ -195,7 +195,7 @@ run_phase 3 phase_3 "SM Failover"
 #
 #########################
 phase_4(){
-	juLog -name=ibsrpdm tp $HOST1 '/usr/sbin/ibsrpdm'
+	juLog -name=srp_server test_srp $HOST2 $GUID2 $HCA2 $IBPORT2 $HOST1 $GUID1 $HCA1 $IBPORT1
 }
 run_phase 4 phase_4 "SRP"
 
