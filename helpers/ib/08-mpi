@@ -15,5 +15,5 @@ test_mpi()
 			;;
 	esac
 	RUN_ARGS="--host $ip1,$ip2 -np 2 ${RUN_ARGS}"
-	tp $host -t 300 "VERBOSE=1 RUN_ARGS='$RUN_ARGS' SHORT=1 /usr/lib64/mpi/gcc/$flavor/tests/runtests.sh"
+	tp $host "VERBOSE=1 RUN_ARGS='$RUN_ARGS' SHORT=1 /usr/lib64/mpi/gcc/$flavor/tests/runtests.sh"
 }
