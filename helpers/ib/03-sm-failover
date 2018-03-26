@@ -3,10 +3,19 @@ _check_sm_lid()
 	local host=$1
 	local expected_lid=$2
 
-	SM_LID=$(tpq $host1 sminfo | sed -e 's/.*sm lid \([0-9]\+\) sm guid.*/\1/')
-	if [ "$SM_LID" != "$expected_lid" ]; then
-		fatal "SM is on LID $SM_LID instead of $expected_lid"
-	fi
+	for i in $(seq 1 10); do
+		SM_LID=$(tpq $host sminfo | sed -e 's/.*sm lid \([0-9]\+\) sm guid.*/\1/')
+		if [ "$SM_LID" == "sminfo: iberror: failed: query" ]; then
+			#New SM is still not up
+			echo "SM still not up... Waiting a bit more .."
+			sleep 10
+			continue
+		fi
+		if [ "$SM_LID" != "$expected_lid" ]; then
+			fatal_error "On host $host: SM is on LID $SM_LID instead of $expected_lid"
+		fi
+		break
+	done
 }
 
 test_sm_failover()
