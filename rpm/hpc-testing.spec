@@ -25,20 +25,21 @@ License:        GPL-3.0
 Group:          Development/Tools/Other
 Url:            https://github.com/nmorey/git-sequencer-status
 Source:         %{name}-%{version}%{git_ver}.tar.bz2
-Requires:       libibverbs
-Requires:       libfabric
-Requires:       opensm
-Requires:       rdma-ndd
-Requires:       infiniband-diags
-Requires:       libibverbs-utils
-Requires:       srp_daemon
-Requires:       fabtests
-Requires:       mpitests-mvapich2
-Requires:       mpitests-openmpi
-Requires:       mpitests-openmpi2
-Requires:       mpitests-mpich
-Requires:       mpitests
-Requires:       ibutils
+Recommends:     libibverbs
+Recommends:     libfabric
+Recommends:     opensm
+Recommends:     rdma-ndd
+Recommends:     infiniband-diags
+Recommends:     libibverbs-utils
+Recommends:     srp_daemon
+Recommends:     fabtests
+Recommends:     mpitests-mvapich2
+Recommends:     mpitests-openmpi
+Recommends:     mpitests-openmpi2
+Recommends:     mpitests-mpich
+Recommends:     mpitests
+Recommends:     ibutils
+Recommends:     targetcli
 BuildArch:      noarch
 
 %description
