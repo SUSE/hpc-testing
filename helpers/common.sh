@@ -33,7 +33,7 @@ load_helpers()
 	local test_type=$2
 
 	source ${topdir}/julog.sh
-	for helper in $(ls ${topdir}/helpers/${test_type}/[0-9][0-9]*); do
+	for helper in $(ls ${topdir}/helpers/${test_type}/[0-9][0-9]* | egrep -v '*~$'); do
 		source ${helper}
 	done
 }
