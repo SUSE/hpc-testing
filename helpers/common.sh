@@ -45,7 +45,7 @@ tp()
 	else
 		echo "twopence_command -b $host $@"
 		set -e
-		twopence_command -b $host "$@"
+		twopence_command -t 300 -b $host "$@"
 		set +e
 	fi
 }
@@ -65,7 +65,7 @@ tpq()
 		set +e
 	else
 		set -e
-		twopence_command -b $host "$@"
+		twopence_command -t 300 -b $host "$@"
 		set +e
 	fi
 }
