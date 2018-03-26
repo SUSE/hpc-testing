@@ -58,7 +58,7 @@ while [ $# -ne 0 ]; do
 			MPI_FLAVOURS=$2
 			shift
 			;;
-		-I,--ipoib)
+		-I|--ipoib)
 			IPOIB_MODES=$2
 			shift
 			;;
