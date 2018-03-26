@@ -5,10 +5,12 @@ DEFAULT_END_PHASE=999
 DEFAULT_IP1=192.168.0.1
 DEFAULT_IP2=192.168.0.2
 DEFAULT_MPI_FLAVOURS="mvapich2,mpich,openmpi,openmpi2"
+DEFAULT_IPOIB_MODES="connected,datagram"
 
 export START_PHASE=${START_PHASE:-$DEFAULT_START_PHASE}
 export END_PHASE=${END_PHASE:-$DEFAULT_END_PHASE}
 export MPI_FLAVOURS=${MPI_FLAVOURS:-$DEFAULT_MPI_FLAVOURS}
+export IPOIB_MODES=${IPOIB_MODES:-$DEFAULT_IPOIB_MODES}
 export IP1=${IP1:-$DEFAULT_IP1}
 export IP2=${IP2:-$DEFAULT_IP2}
 export HOST1=
@@ -21,13 +23,14 @@ load_helpers $(dirname $0) "ib"
 usage(){
 	echo "Usage: ${0} [options] <host1> <host2>"
 	echo "Options:"
-	echo "  -h, --help                 Display usage"
-	echo "  -s, --start-phase          Phase to start from (default is $DEFAULT_START_PHASE)"
-	echo "  -e, --end-phase            Phase to stop at (default is $DEFAULT_END_PHASE)"
-	echo "  -v, --verbose              Display test logs in console."
-	echo "      --ip1 <ip>             IP for IPoIB on host1 (default is $DEFAULT_IP1)"
-	echo "      --ip2 <ip>             IP for IPoIB on host2 (default is $DEFAULT_IP2)"
-	echo "  -M, --mpi <mpi>[,<mpi>...] Comma separated list of MPI flavours to test (default is $DEFAULT_MPI_FLAVOURS)"
+	echo "  -h, --help                     Display usage"
+	echo "  -s, --start-phase              Phase to start from (default is $DEFAULT_START_PHASE)"
+	echo "  -e, --end-phase                Phase to stop at (default is $DEFAULT_END_PHASE)"
+	echo "  -v, --verbose                  Display test logs in console."
+	echo "      --ip1 <ip>                 IP for IPoIB on host1 (default is $DEFAULT_IP1)"
+	echo "      --ip2 <ip>                 IP for IPoIB on host2 (default is $DEFAULT_IP2)"
+	echo "  -M, --mpi <mpi>[,<mpi>...]     Comma separated list of MPI flavours to test (default is $DEFAULT_MPI_FLAVOURS)"
+	echo "  -I, --ipoib <mode>[,<mode>...] Comma separated list of IPoIB mode to test (default is $DEFAULT_IPOIB_MODES)"
 }
 
 while [ $# -ne 0 ]; do
@@ -53,6 +56,10 @@ while [ $# -ne 0 ]; do
 			;;
 		-M|--mpi)
 			MPI_FLAVOURS=$2
+			shift
+			;;
+		-I,--ipoib)
+			IPOIB_MODES=$2
 			shift
 			;;
 		--help|-h)
@@ -150,7 +157,7 @@ run_phase 1 phase_1_2 "Fabric init (2/2)"
 #
 #########################
 phase_2(){
-	for mode in connected datagram; do
+	for mode in $(echo $IPOIB_MODES | sed -e 's/,/ /g'); do
 		juLog_fatal -name=h1_${mode}_ip_mode "set_ipoib_mode $HOST1 $IPPORT1 $mode"
 		juLog_fatal -name=h1_${mode}_ip_down "set_ipoib_down $HOST1 $IPPORT1"
 		juLog_fatal -name=h1_${mode}_ip_up   "set_ipoib_up $HOST1 $IPPORT1 $IP1/24"
