@@ -37,3 +37,21 @@ load_helpers()
 		source ${helper}
 	done
 }
+
+run_phase(){
+	local phase=$1
+	local func=$2
+	shift 2
+	if [ $START_PHASE -gt $phase -o $END_PHASE -lt $phase ]; then
+		echo "Skipping phase $phase"
+		return 0
+	else
+		echo "*******************************"
+		echo "*** Phase $phase:" $*
+		echo "*******************************"
+		eval $func
+		if [ $? -ne 0 ]; then
+			fatal_error "Phase failed"
+		fi
+	fi
+}
