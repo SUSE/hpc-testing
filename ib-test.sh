@@ -122,7 +122,7 @@ phase_1_1(){
 	sleep 1
 	juLog_fatal -name=h1_openSM_start "start_opensm $HOST1"
 	# Leave some time for openSM to bring the link up
-	sleep 3
+	sleep 5
 }
 run_phase 1 phase_1_1 "Fabric init (1/2)"
 
