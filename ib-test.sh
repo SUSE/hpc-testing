@@ -102,6 +102,9 @@ phase_0(){
 
 	juLog -name=h1_reset_all_ports "reset_all_ports $HOST1"
 	juLog -name=h2_reset_all_ports "reset_all_ports $HOST2"
+
+	# We need to sleep a little bit here to let the port reset
+	sleep 5
 }
 run_phase 0 phase_0 "State Cleanup"
 
@@ -118,8 +121,6 @@ phase_1_1(){
 	juLog -name=h1_rdma_ndd "setup_rdma_ndd $HOST1"
 	juLog -name=h2_rdma_ndd "setup_rdma_ndd $HOST2"
 
-	# We need to sleep a little bit here in case the port are stil reseting from pahse 0
-	sleep 1
 	juLog_fatal -name=h1_openSM_start "start_opensm $HOST1 -p 10"
 	# Leave some time for openSM to bring the link up
 	sleep 10
