@@ -131,6 +131,15 @@ EOF
 
   return $evErr
 }
+juLog_summary()
+{
+	if [ $? -eq 0 -a $errors -eq 0 ]; then
+		echo "[SUCCESS] Testsuite summary: tests=$asserts errors=$errors time=$total"
+	else
+		echo "[FAILURE] Testsuite summary: tests=$asserts errors=$errors time=$total"
+	fi
+}
+trap juLog_summary EXIT
 
 juLog_fatal() {
 	juLog "$@"
