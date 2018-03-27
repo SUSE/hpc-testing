@@ -7,14 +7,14 @@ test_mpi()
 	export RUN_ARGS=""
 
 	case $flavor in
-		openmpi*)
+		openmpi)
 			RUN_ARGS="${RUN_ARGS} --allow-run-as-root"
 			;;
-		openmpi2*)
+		openmpi2)
 			# openmpi2 requires to blacklist the rdma osc component due to bsc#1087031
 			RUN_ARGS="${RUN_ARGS} --mca osc ^rdma --allow-run-as-root"
 			;;
-		openmpi3*)
+		openmpi3)
 			RUN_ARGS="${RUN_ARGS}  --allow-run-as-root --oversubscribe"
 			;;
 	esac
