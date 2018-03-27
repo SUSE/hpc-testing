@@ -40,6 +40,7 @@ Recommends:     mpitests-mpich
 Recommends:     mpitests
 Recommends:     ibutils
 Recommends:     targetcli
+Recommends:     dapl-utils
 BuildArch:      noarch
 
 %description
