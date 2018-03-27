@@ -4,6 +4,6 @@ test_libfabric()
 	local server_ip=$2
 	local client_ip=$3
 	# Ignore fi_rdm_shared_av which is broken upstream
-	tp $host "/usr/bin/runfabtests.sh -v -t short verbs $server_ip $client_ip"
+	tp $host "/usr/bin/runfabtests.sh -v -t short-e 'dgram_pingpong -I 5' verbs $server_ip $client_ip"
 }
 
