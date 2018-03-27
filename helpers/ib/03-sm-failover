@@ -12,10 +12,17 @@ _check_sm_lid()
 			continue
 		fi
 		if [ "$SM_LID" != "$expected_lid" ]; then
-			fatal_error "On host $host: SM is on LID $SM_LID instead of $expected_lid"
+			echo "WARNING:On host $host: SM is on LID $SM_LID instead of $expected_lid"
+			echo "Waiting a bit to see how it goes..."
+			sleep 2
+			continue
 		fi
-		break
+		# We have the right SM lid
+		return 0
 	done
+	if [ "$SM_LID" != "$expected_lid" ]; then
+		fatal_error "On host $host: SM is on LID $SM_LID instead of $expected_lid"
+	fi
 }
 
 test_sm_failover()
