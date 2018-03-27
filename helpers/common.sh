@@ -93,8 +93,10 @@ run_phase(){
 		echo "*** Phase $phase:" $*
 		echo "*******************************"
 		eval $func
-		if [ $? -ne 0 ]; then
-			fatal_error "Phase failed"
+		status=$?
+		echo "*******************************"
+		echo "*** End of phase $phase:" $* " Status=$status"
+		echo "*******************************"
 		fi
 	fi
 }
