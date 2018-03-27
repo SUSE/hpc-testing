@@ -215,7 +215,7 @@ run_phase 5 phase_5 "NFSoRDMA"
 #
 #########################
 phase_6(){
-	true
+	juLog -name=dapl test_dapl $HOST1 $IBPORT1 $HOST2 $IBPORT2 $IP2
 }
 run_phase 6 phase_6 "DAPL"
 

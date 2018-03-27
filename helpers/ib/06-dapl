@@ -1,0 +1,30 @@
+test_dapl(){
+	local host1=$1
+	local ib1=$2
+	local host2=$3
+	local ib2=$4
+	local $ip2=$5
+
+	local dapl_name1=$(tqp $host1 "grep '$ib1' /etc/dat.conf | head -n 1 | awk  '{print \$1}'")
+	local dapl_name2=$(tqp $host2 "grep '$ib2' /etc/dat.conf | head -n 1 | awk  '{print \$1}'")
+
+
+	# Start test server on host2
+	tp $host2 "killall -9 dapl-test || true; dapl-test -T S -d -D $dapl_name2" &
+	# Wait for the server to start
+	tp $host2 sleep 2
+
+	tp $host1 "dapl-test -T T -s $ip2 -D $dapl_name1 -i 100 -t 1 -w 1 -R BE client SR 256 1 server SR 256 1"
+	tp $host1 "dapl-test -T T -s $ip2 -D $dapl_name1 -i 100 -t 1 -w 1 -V -P -R BE client SR 1024 -f server SR 1536 2 -f
+"
+	tp $host1 "dapl-test -T T -s $ip2 -D $dapl_name1 -i 100 -t 1 -w 1 -V -P -R BE client SR 1024 1 server SR 1024 1"
+	tp $host1 "dapl-test -T T -s $ip2 -D $dapl_name1 -i 100 -t 1 -w 10 -V -P -R BE client SR 1024 3 server SR 1536 2"
+	tp $host1 "dapl-test -T T -s $ip2 -D $dapl_name1 -i 100 -t 1 -w 1 -V -P -R BE client SR 256 1 server RW 4096 1 server SR 256 1"
+	tp $host1 "dapl-test -T T -s $ip2 -D $dapl_name1 -i 100 -t 1 -w 1 -V -P -R BE client SR 256 1 server RR 4096 1 server SR 256 1"
+	tp $host1 "dapl-test -T T -s $ip2 -D $dapl_name1 -i 100 -t 4 -w 8 -V -P -R BE client SR 256 1 server RR 4096 1 server SR 256 1 client SR 256 1 server RW 4096 1 server SR 256 1"
+	tp $host1 "dapl-test -T P -s $ip2 -D $dapl_name1 -i 1024 -p 64 -m p RW 8192 2"
+	tp $host1 "dapl-test -T P -s $ip2 -D $dapl_name1 -i 1024 -p 64 -m p RR 4096"
+	tp $host1 "dapl-test -T T -s $ip2 -D $dapl_name1 -i 100 -t 1 -w 10 -V -P -R BE client SR 1024 3 server SR 1536 2"
+	tp $host2 "killall -9 dapl-test || true"
+	wait
+}
