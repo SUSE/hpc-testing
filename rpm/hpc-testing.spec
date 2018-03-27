@@ -18,7 +18,7 @@
 %define git_ver %{nil}
 
 Name:           hpc-testing
-Version:        0.2
+Version:        0.2.1
 Release:        0
 Summary:        Test scripts to validate HPC packages
 License:        GPL-3.0
