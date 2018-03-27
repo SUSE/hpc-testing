@@ -97,6 +97,10 @@ run_phase(){
 		echo "*******************************"
 		echo "*** End of phase $phase:" $* " Status=$status"
 		echo "*******************************"
+		if [ $END_PHASE -eq $phase ]; then
+			# We reach the last phase
+			# exit now
+			exit 0
 		fi
 	fi
 }
