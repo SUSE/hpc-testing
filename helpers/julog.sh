@@ -144,6 +144,7 @@ trap juLog_summary EXIT
 juLog_fatal() {
 	juLog "$@"
 	if [ $? -ne 0 ]; then
+		echo "[ERROR] Fatal failure. Exiting..." >&2
 		exit 1
 	fi
 }
