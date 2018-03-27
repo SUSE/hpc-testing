@@ -1,0 +1,11 @@
+- hpc-testing 0.2
+  * Code cleanup
+  * RPM packaging
+  * Better error handling
+  * Add SM failover tests
+  * Add SRP tests
+  * Add DAPL tests
+  * Test all OpenMPI
+  * Enhance bad timing resistance
+- hpc-testing 0.1
+  * Initial release
