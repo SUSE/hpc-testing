@@ -135,8 +135,10 @@ juLog_summary()
 {
 	if [ $? -eq 0 -a $errors -eq 0 ]; then
 		echo "[SUCCESS] Testsuite summary: tests=$asserts errors=$errors time=$total"
+		exit 0
 	else
 		echo "[FAILURE] Testsuite summary: tests=$asserts errors=$errors time=$total"
+		exit 1
 	fi
 }
 trap juLog_summary EXIT
