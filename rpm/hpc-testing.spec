@@ -41,6 +41,7 @@ Recommends:     mpitests
 Recommends:     ibutils
 Recommends:     targetcli
 Recommends:     dapl-utils
+Recommends:     twopence-shell-client
 BuildArch:      noarch
 
 %description
