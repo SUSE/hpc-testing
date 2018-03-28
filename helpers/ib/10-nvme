@@ -40,7 +40,7 @@ test_nvme(){
 				cp -R /tmp/srp-hpc-test/input /tmp/srp-hpc-test/output &&
 				diff -q /tmp/srp-hpc-test/input /tmp/srp-hpc-test/output&&
 				umount /tmp/srp-hpc-test &&
-				! (nvme disconnect -n testnqn) &&
+				nvme disconnect -n testnqn &&
 				! (lsblk | grep nvme)'
 
 	tp $server 'nvmetcli clear &&
