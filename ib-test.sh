@@ -257,3 +257,14 @@ phase_9(){
 }
 run_phase 9 phase_9 "libfabric"
 
+
+#########################
+#
+# Phase 10: NVMEoF
+#
+#########################
+phase_10(){
+	juLog -name=nvme test_nvme $HOST2 $IP2 $HOST1
+}
+run_phase 10 phase_10 "nvme"
+
