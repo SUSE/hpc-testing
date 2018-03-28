@@ -85,6 +85,11 @@ run_phase(){
 	local phase=$1
 	local func=$2
 	shift 2
+	if [ $END_PHASE -lt $phase ]; then
+		# We reach passed the last phase
+		# exit now
+		exit 0
+	fi
 	if [ $START_PHASE -gt $phase -o $END_PHASE -lt $phase ]; then
 		echo "Skipping phase $phase"
 		return 0
@@ -97,10 +102,5 @@ run_phase(){
 		echo "*******************************"
 		echo "*** End of phase $phase:" $* " Status=$status"
 		echo "*******************************"
-		if [ $END_PHASE -eq $phase ]; then
-			# We reach the last phase
-			# exit now
-			exit 0
-		fi
 	fi
 }
