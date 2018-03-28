@@ -39,13 +39,14 @@ tp()
 		set -e
 		(
 			cd $HOME;
+			set -x
 			eval $@
 		)
 		set +e
 	else
 		echo "twopence_command -b $host $@"
 		set -e
-		twopence_command -t 300 -b $host "$@"
+		twopence_command -t 300 -b $host "set -x; $@"
 		set +e
 	fi
 }
