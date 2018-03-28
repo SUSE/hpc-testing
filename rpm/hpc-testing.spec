@@ -39,7 +39,9 @@ Recommends:     mpitests-openmpi2
 Recommends:     mpitests-mpich
 Recommends:     mpitests
 Recommends:     ibutils
-Recommends:     targetcli
+Recommends:     targetcli-fb
+Recommends:     nvme-cli
+Recommends:     nvmetcli
 Recommends:     dapl-utils
 Recommends:     twopence-shell-client
 BuildArch:      noarch
