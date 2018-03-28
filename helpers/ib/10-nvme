@@ -1,0 +1,51 @@
+test_nvme(){
+	local server=$1
+	local server_ip=$2
+	local client=$3
+
+
+	# Cleanup old stuff just in case
+	tp $client "mount | grep /dev/nvme | awk '{ print \$1}' | xargs -I - umount - 2>/dev/null || true;
+	   		    nvme disconnect -n testnq || true"
+
+	cat helpers/ib/nvmet.json | tpq $server 'cat > hpc-nvmet.json'
+
+	tp $server 'umount /tmp/hpc-test.mount 2>/dev/null || true;
+	   		    rm -Rf /tmp/hpc-test.mount /tmp/hpc-test.io 2>/dev/null || true;
+	   		   	losetup -a | grep hpc-test.io | sed -e s/:.*// | xargs losetup -d || true;
+				modprobe nvmet;
+				nvmetcli clear || true;
+				modprobe nvmet_rdma &&
+				LOOPD=$(losetup -f) &&
+				dd if=/dev/zero of=/tmp/hpc-test.io bs=1M count=256 &&
+				losetup ${LOOPD} /tmp/hpc-test.io &&
+				mkfs.ext3 ${LOOPD} &&
+				mkdir /tmp/hpc-test.mount/ &&
+				mount ${LOOPD} /tmp/hpc-test.mount/ &&
+				dd if=/dev/urandom bs=1M count=64 of=/tmp/hpc-test.mount/input &&
+				umount  /tmp/hpc-test.mount &&
+				sed -i -e s/@MYIP@/'$server_ip'/ -e s%@BLK@%${LOOPD}% hpc-nvmet.json &&
+				nvmetcli restore hpc-nvmet.json'
+
+	tp $client 'umount /tmp/srp-hpc-test 2>/dev/null || true;
+	   		    rm -Rf /tmp/srp-hpc-test 2>/dev/null || true;
+				modprobe nvme_rdma &&
+				mkdir /tmp/srp-hpc-test &&
+				rm -f /etc/nvme/hostid &&
+				nvme discover -t rdma -a '$server_ip' -s 4420 &&
+				nvme connect -t rdma -n testnqn -a 192.168.0.2 -s 4420 &&
+				block_device=$(lsblk | grep nvme | awk "{ print \$1}") &&
+				echo $block_device &&
+				mount /dev/$block_device /tmp/srp-hpc-test &&
+				cp -R /tmp/srp-hpc-test/input /tmp/srp-hpc-test/output &&
+				diff -q /tmp/srp-hpc-test/input /tmp/srp-hpc-test/output&&
+				umount /tmp/srp-hpc-test &&
+				! (nvme disconnect -n testnqn) &&
+				! (lsblk | grep nvme)'
+
+	tp $server 'nvmetcli clear &&
+	   		    mount -o loop /tmp/hpc-test.io /tmp/hpc-test.mount &&
+			   	diff -q /tmp/hpc-test.mount/input /tmp/hpc-test.mount/output &&
+				umount /tmp/hpc-test.mount &&
+				losetup -a | grep hpc-test.io | sed -e s/:.*// | xargs losetup -d'
+}
