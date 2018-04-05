@@ -16,13 +16,13 @@ test_srp()
 	tp $client 'rmmod ib_srp || true'
 	tp $srp_server "umount /tmp/hpc-test.mount || true;
 	   			   	targetcli /backstores/fileio/ delete name=hpc-test || true;
-                    targetcli /ib_srpt delete 0x$server_wwn || true;
+                    targetcli /srpt delete ib.$server_wwn || true;
 					rm -Rf /tmp/hpc-test.io /tmp/hpc-test.mount &&
 					modprobe ib_srpt &&
 					targetcli /backstores/fileio create name=hpc-test file_or_dev=/tmp/hpc-test.io size=256M &&
-					targetcli /ib_srpt create 0x$server_wwn &&
-					targetcli /ib_srpt/0x$server_wwn/luns create /backstores/fileio/hpc-test &&
-					targetcli /ib_srpt/0x$server_wwn/acls create 0x$client_wwn &&
+					targetcli /srpt create 0x$server_wwn &&
+					targetcli /srpt/ib.$server_wwn/luns create /backstores/fileio/hpc-test &&
+					targetcli /srpt/ib.$server_wwn/acls create 0x$client_wwn &&
 					mkfs -t ext3 /tmp/hpc-test.io &&
 					mkdir /tmp/hpc-test.mount && 
 					mount -o loop /tmp/hpc-test.io /tmp/hpc-test.mount &&
