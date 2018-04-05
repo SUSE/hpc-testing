@@ -26,6 +26,7 @@ usage(){
 	echo "  -h, --help                     Display usage"
 	echo "  -s, --start-phase              Phase to start from (default is $DEFAULT_START_PHASE)"
 	echo "  -e, --end-phase                Phase to stop at (default is $DEFAULT_END_PHASE)"
+	echo "  -p, --phase <#phase>           Launch only this phase"
 	echo "  -v, --verbose                  Display test logs in console."
 	echo "      --ip1 <ip>                 IP for IPoIB on host1 (default is $DEFAULT_IP1)"
 	echo "      --ip2 <ip>                 IP for IPoIB on host2 (default is $DEFAULT_IP2)"
@@ -40,6 +41,11 @@ while [ $# -ne 0 ]; do
 			shift
 			;;
 		-e|--end-phase)
+			END_PHASE=$2
+			shift
+			;;
+		-p|--phase)
+			START_PHASE=$2
 			END_PHASE=$2
 			shift
 			;;
