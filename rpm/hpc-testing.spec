@@ -45,6 +45,7 @@ Recommends:     nvmetcli
 Recommends:     dapl-utils
 Recommends:     twopence-shell-client
 BuildArch:      noarch
+Requires:       bc
 
 %description
 QA test suite for Infiniband and OmniPath validation
