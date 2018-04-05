@@ -28,7 +28,8 @@ for board in $boards; do
 		if [ "$status" == "Active" ]; then
 			guid=$(echo "$res" | grep "Port GUID:" | awk "{print \$NF}");
 			lid=$(echo "$res" | grep "Base lid:" | awk "{print \$NF}");
-			echo "ib$ip_count $guid $lid $board $port";
+			sysguid=$(ibstat $board | grep "System image GUID:" | awk "{print \$NF}");
+			echo "ib$ip_count $guid $lid $board $port $sysguid";
 			exit 0;
 		fi;
 		ip_count=$(expr $ip_count + 1);
@@ -45,14 +46,16 @@ done
 	lid=$(echo $res | awk '{ print $3}')
 	hca=$(echo $res | awk '{ print $4}')
 	port=$(echo $res | awk '{ print $5}')
+	sysguid=$(echo $res | awk '{ print $6}')
 	eval export IPPORT$host_id=$ibf
 	eval export GUID$host_id=$guid
 	eval export LID$host_id=$lid
 	eval export HCA$host_id=$hca
 	eval export IBPORT$host_id=$port
+	eval export SYSGUID$host_id=$sysguid
 
 	echo "[SUCCESS] Host $host uses interface $ibf."\
-		 " Board=$board Port=$port GUID=$guid LID=$lid"
+		 " Board=$board Port=$port GUID=$guid LID=$lid SYSGUID=$sysguid"
 }
 
 setup_ssh()
