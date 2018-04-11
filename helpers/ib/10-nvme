@@ -33,7 +33,7 @@ test_nvme(){
 				mkdir /tmp/srp-hpc-test &&
 				rm -f /etc/nvme/hostid &&
 				nvme discover -t rdma -a '$server_ip' -s 4420 &&
-				nvme connect -t rdma -n testnqn -a 192.168.0.2 -s 4420 &&
+				nvme connect -t rdma -n testnqn -a '$server_ip' -s 4420 &&
 				block_device=$(lsblk | grep nvme | awk "{ print \$1}") &&
 				echo $block_device &&
 				mount /dev/$block_device /tmp/srp-hpc-test &&
