@@ -105,3 +105,14 @@ run_phase(){
 		echo "*******************************"
 	fi
 }
+
+get_suse_version(){
+	local host=$1
+	local varname=SUSE_VERSION_$(echo $host | tr '.' '_')
+
+	if [ "${!varname}" == "" ]; then
+		export ${varname}=$(tpq $host 'source /etc/os-release; echo $VERSION_ID')
+	fi
+	echo ${!varname}
+	return 0
+}
