@@ -265,7 +265,18 @@ run_phase 7 phase_7 "RDMA/Verbs"
 #
 #########################
 phase_8(){
+	case $(get_suse_version $HOST1) in
+		15)
+			juLog -name=mpitests_skipping_openmpi 'echo "WARNING: Disabling OpenMPI for SLE15"'
+			MPI_FLAVOURS=$(echo $MPI_FLAVOURS | sed -e 's/openmpi,//g' -e 's/openmpi$//g')
+			;;
+		*)
+			# N/A
+			true
+			;;
+	esac
 	for flavour in $(echo $MPI_FLAVOURS | sed -e 's/,/ /g'); do
+
 		juLog -name=mpitests_${flavour} test_mpi ${flavour} $HOST1 $IP1 $IP2
 	done
 }
