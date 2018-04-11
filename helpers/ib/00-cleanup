@@ -7,7 +7,7 @@ setup_requirements()
 {
 	local host=$1
 	echo "Setting up needed packages on $host"
-	tp $host "zypper install --no-confirm opensm infiniband-diags rdma-ndd libibverbs-utils srp_daemon fabtests mpitests-mvapich2 mpitests-openmpi mpitests-openmpi2 mpitests-mpich ibutils dapl-utils targetcli-fb nvme-cli nvmetcli psmisc"
+	tp $host "zypper install --no-confirm opensm infiniband-diags rdma-ndd libibverbs-utils srp_daemon fabtests mpitests-mvapich2 mpitests-openmpi mpitests-openmpi2 mpitests-mpich ibutils dapl-utils targetcli-fb nvme-cli nvmetcli psmisc nfs-kernel-server"
 }
 
 kill_opensm()
