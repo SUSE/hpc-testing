@@ -19,7 +19,7 @@ reset_all_ports()
 {
 	local host=$1
 
-	tp $host "for port_id in \$(seq 1 \$(ibstat -p | wc -l)); do
-	   		 	   ibportstate -D 0 \$port_id reset;
-			   done"
+	tp $host 'for port_guid in $(ibstat -p); do
+	   		 	   ibportstate -G $port_guid reset;
+			   done'
 }
