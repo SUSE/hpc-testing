@@ -1,8 +1,15 @@
 setup_rdma_ndd()
 {
 	local host=$1
-	tp $host 'systemctl status rdma-ndd ||
-	   		  (systemctl start rdma-ndd && systemctl status rdma-ndd)'
+	case $(get_suse_version $host) in
+		12.3|42.3)
+			tp $host 'systemctl status rdma-ndd ||
+				   	  (systemctl start rdma-ndd && systemctl status rdma-ndd)'
+			;;
+		*)
+			true
+			;;
+	esac
 }
 
 start_opensm()
