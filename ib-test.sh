@@ -15,7 +15,7 @@ export IP1=${IP1:-$DEFAULT_IP1}
 export IP2=${IP2:-$DEFAULT_IP2}
 export HOST1=
 export HOST2=
-
+export DO_MAD=1
 
 source $(dirname $0)/helpers/common.sh
 load_helpers $(dirname $0) "ib"
@@ -32,6 +32,7 @@ usage(){
 	echo "      --ip2 <ip>                 IP for IPoIB on host2 (default is $DEFAULT_IP2)"
 	echo "  -M, --mpi <mpi>[,<mpi>...]     Comma separated list of MPI flavours to test (default is $DEFAULT_MPI_FLAVOURS)"
 	echo "  -I, --ipoib <mode>[,<mode>...] Comma separated list of IPoIB mode to test (default is $DEFAULT_IPOIB_MODES)"
+	echo "  -n, --no-mad                   Disable test that requires MAD support. Needed for testing over SR-IOV"
 }
 
 while [ $# -ne 0 ]; do
@@ -67,6 +68,9 @@ while [ $# -ne 0 ]; do
 		-I|--ipoib)
 			IPOIB_MODES=$2
 			shift
+			;;
+		-n|--no-mad)
+			DO_MAD=0
 			;;
 		--help|-h)
 			usage $0
@@ -106,11 +110,13 @@ phase_0(){
 	juLog -name=h1_kill_opensm "kill_opensm $HOST1"
 	juLog -name=h2_kill_opensm "kill_opensm $HOST2"
 
-	juLog -name=h1_reset_all_ports "reset_all_ports $HOST1"
-	juLog -name=h2_reset_all_ports "reset_all_ports $HOST2"
+	if [ $DO_MAD -eq 1 ]; then
+		juLog -name=h1_reset_all_ports "reset_all_ports $HOST1"
+		juLog -name=h2_reset_all_ports "reset_all_ports $HOST2"
 
-	# We need to sleep a little bit here to let the port reset
-	sleep 5
+		# We need to sleep a little bit here to let the port reset
+		sleep 5
+	fi
 }
 run_phase 0 phase_0 "State Cleanup"
 
@@ -127,9 +133,11 @@ phase_1_1(){
 	juLog -name=h1_rdma_ndd "setup_rdma_ndd $HOST1"
 	juLog -name=h2_rdma_ndd "setup_rdma_ndd $HOST2"
 
-	juLog_fatal -name=h1_openSM_start "start_opensm $HOST1 -p 10"
-	# Leave some time for openSM to bring the link up
-	sleep 10
+	if [ $DO_MAD -eq 1 ]; then
+		juLog_fatal -name=h1_openSM_start "start_opensm $HOST1 -p 10"
+		# Leave some time for openSM to bring the link up
+		sleep 10
+	fi
 }
 run_phase 1 phase_1_1 "Fabric init (1/2)"
 
@@ -150,11 +158,13 @@ phase_1_2(){
 	juLog_fatal -name=h1_ibvinfo tp $HOST1 ibv_devinfo
 	juLog_fatal -name=h2_ibvinfo tp $HOST2 ibv_devinfo
 
-	juLog_fatal -name=h1_ibdiagnet test_ibdiagnet $HOST1
-	juLog_fatal -name=h2_ibdiagnet test_ibdiagnet $HOST2
+	if [ $DO_MAD -eq 1 ]; then
+		juLog_fatal -name=h1_ibdiagnet test_ibdiagnet $HOST1
+		juLog_fatal -name=h2_ibdiagnet test_ibdiagnet $HOST2
 
-	juLog -name=h1_test_nodedesc "test_nodedesc $HOST1 $GUID1"
-	juLog -name=h2_test_nodedesc "test_nodedesc $HOST2 $GUID2"
+		juLog -name=h1_test_nodedesc "test_nodedesc $HOST1 $GUID1"
+		juLog -name=h2_test_nodedesc "test_nodedesc $HOST2 $GUID2"
+	fi
 }
 run_phase 1 phase_1_2 "Fabric init (2/2)"
 
@@ -192,7 +202,9 @@ run_phase 2 phase_2 "IPoIB"
 #
 #########################
 phase_3(){
-	juLog -name=test_sm_failover "test_sm_failover $HOST1 $LID1 $HOST2 $LID2"
+	if [ $DO_MAD -eq 1 ]; then
+		juLog -name=test_sm_failover "test_sm_failover $HOST1 $LID1 $HOST2 $LID2"
+	fi
 }
 run_phase 3 phase_3 "SM Failover"
 
