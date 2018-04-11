@@ -32,6 +32,7 @@ usage(){
 	echo "      --ip2 <ip>                 IP for IPoIB on host2 (default is $DEFAULT_IP2)"
 	echo "  -M, --mpi <mpi>[,<mpi>...]     Comma separated list of MPI flavours to test (default is $DEFAULT_MPI_FLAVOURS)"
 	echo "  -I, --ipoib <mode>[,<mode>...] Comma separated list of IPoIB mode to test (default is $DEFAULT_IPOIB_MODES)"
+	echo "                                 Note that connected mod emaybe autop disabled if the HW does not support it"
 	echo "  -n, --no-mad                   Disable test that requires MAD support. Needed for testing over SR-IOV"
 }
 
@@ -174,6 +175,11 @@ run_phase 1 phase_1_2 "Fabric init (2/2)"
 #
 #########################
 phase_2(){
+
+	# Check that both cards support connected mode or strip it from the enabled modes
+	(is_connected_supported $HOST1 $IPPORT1 && is_connected_supported $HOST2 $IPPORT2) ||
+		juLog -name=ipoib_skipping_connected 'echo "WARNING: Disabling connected tests as it is not supported by all HCAs"' &&
+			IPOIB_MODES=$(echo $IPOIB_MODES | sed -e 's/connected//g')
 	for mode in $(echo $IPOIB_MODES | sed -e 's/,/ /g'); do
 		juLog_fatal -name=h1_${mode}_ip_mode "set_ipoib_mode $HOST1 $IPPORT1 $mode"
 		juLog_fatal -name=h1_${mode}_ip_down "set_ipoib_down $HOST1 $IPPORT1"

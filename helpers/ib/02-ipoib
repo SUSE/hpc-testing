@@ -49,3 +49,18 @@ test_sftp()
 	# Check file
 	tp $host "diff -q sftp.orig sftp.copy"
 }
+
+is_connected_supported()
+{
+	local host=$1
+	local port=$2
+
+	mac_first_byte=$(tpq $host 'ip link show '$port' | grep link/infiniband | 
+	 sed -e "s/.*link\/infiniband \([0-9a-f]\)[0-9a-f]:.*/\1/"')
+
+	if [ $mac_first_byte -ge 8 ]; then
+		return 0
+	else
+		return 1
+	fi
+}
