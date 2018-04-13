@@ -38,3 +38,10 @@ reset_all_ports()
 	   		 	   ibportstate -G $port_guid reset;
 			   done'
 }
+
+firewall_down()
+{
+	# Take down the firewall as some tests requires more than SSH port to be open (openMPI, NFSoRDMA, etc.)
+	local host=$1
+	tp $host 'iptables -P INPUT ACCEPT && iptables --flush'
+}

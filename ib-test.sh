@@ -118,6 +118,10 @@ phase_0(){
 		# We need to sleep a little bit here to let the port reset
 		sleep 5
 	fi
+
+	juLog -name=h1_firewall_down "firewall_down $HOST1"
+	juLog -name=h2_firewall_down "firewall_down $HOST2"
+
 }
 run_phase 0 phase_0 "State Cleanup"
 
