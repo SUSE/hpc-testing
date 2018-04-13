@@ -1,16 +1,18 @@
 test_srp()
 {
 	local srp_server=$1
-	local server_guid=$2
-	local server_wwn="fe80000000000000$(echo $server_guid| sed -e 's/0x//')"
-	local server_board=$3
-	local server_port=$4
+	local server_guid=$(echo $2| sed -e 's/0x//')
+	local server_sysguid=$(echo $3 | sed -e 's/0x//')
+	local server_wwn="fe80000000000000${server_guid}"
+	local server_sys_wwn="fe80000000000000${server_sysguid}"
+	local server_board=$4
+	local server_port=$5
 
-	local client=$5
-	local client_guid=$6
-	local client_wwn="0000000000000000$(echo $client_guid| sed -e 's/0x//')"
-	local client_board=$7
-	local client_port=$8
+	local client=$6
+	local client_guid=$(echo $7 |  sed -e 's/0x//')
+	local client_wwn="0000000000000000${client_guid}"
+	local client_board=$8
+	local client_port=$9
 
 	# Cleanup old stuff
 	tp $client 'rmmod ib_srp || true'
@@ -32,9 +34,11 @@ test_srp()
 	   		    rm -Rf /tmp/srp-hpc-test || true;
 				modprobe ib_srp &&
 				mkdir /tmp/srp-hpc-test &&
-				ibsrpdm -c | grep "dgid='$server_wwn'" >
-						 /sys/class/infiniband_srp/srp-$client_board-$client_port/add_target &&
-				block_device=$(ls /sys/class/infiniband/$client_board/device/host*/target*/*:*/block) &&
+				(ibsrpdm -c | grep "dgid='$server_wwn'";
+				 ibsrpdm -c | grep "dgid='$server_sys_wwn'" | sed -e "s/'$server_sysguid'/'$server_guid'/g") >
+						 /sys/class/infiniband_srp/srp-'$client_board'-'$client_port'/add_target &&
+				sleep 1 &&
+				block_device=$(ls /sys/class/infiniband/'$client_board'/device/host*/target*/*:*/block) &&
 				mount /dev/$block_device /tmp/srp-hpc-test &&
 				cp -R /tmp/srp-hpc-test/input /tmp/srp-hpc-test/output &&
 				diff -q /tmp/srp-hpc-test/input /tmp/srp-hpc-test/output&&
