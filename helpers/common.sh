@@ -86,6 +86,7 @@ run_phase(){
 	local phase=$1
 	local func=$2
 	shift 2
+	juLogSetClassName "phase.$phase.$(echo $* | tr 'A-Z' 'a-z' | tr ' '  '.')"
 	if [ $END_PHASE -lt $phase ]; then
 		# We reach passed the last phase
 		# exit now

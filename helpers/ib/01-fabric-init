@@ -61,6 +61,13 @@ done
 	eval export IBPORT$host_id=$port
 	eval export SYSGUID$host_id=$sysguid
 
+	juLogSetProperty $host.ip_if $ibf
+	juLogSetProperty $host.guid $guid
+	juLogSetProperty $host.lid $lid
+	juLogSetProperty $host.hca $hca
+	juLogSetProperty $host.port $port
+	juLogSetProperty $host.sysguid $sysguid
+
 	echo "[SUCCESS] Host $host uses interface $ibf."\
 		 " Board=$board Port=$port GUID=$guid LID=$lid SYSGUID=$sysguid"
 }

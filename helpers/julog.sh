@@ -22,6 +22,9 @@
 ###
 
 asserts=00; errors=0; total=0; content=""
+properties=""
+classname="default"
+timestamp=$(date -u '+%Y-%m-%dT%H:%M:%S')
 
 # create output folder
 juDIR=${CIRCLE_TEST_REPORTS:-`pwd`/results}
@@ -35,6 +38,27 @@ errfile=/tmp/evErr.$$.log
 eVal() {
   (eval "$1")
   echo $? | tr -d "\n" >$errfile
+}
+
+juLogRefreshFile() {
+  ## testsuite block
+  cat <<EOF > "$juDIR/TEST-$suite.xml"
+  <testsuite failures="0" name="$suite" tests="1" errors="$errors" time="$total" hostname="$(hostname)" timestamp="$timestamp">
+    <properties>$properties
+    </properties>
+    $content
+  </testsuite>
+EOF
+}
+
+juLogSetProperty() {
+	properties="$properties
+        <property name=\"$1\" value=\"$2\" />"
+	juLogRefreshFile
+}
+
+juLogSetClassName() {
+	classname="$1"
 }
 
 # Method to clean old tests
@@ -108,26 +132,21 @@ juLog() {
 
   # write the junit xml report
   ## failure tag
-  [ $err = 0 ] && failure="" || failure="
-      <failure type=\"ScriptError\" message=\"Script Error\"></failure>
-  "
+  [ $err = 0 ] && failure="" || 
+		  failure="<failure type=\"ScriptError\" message=\"Script Error\"></failure>"
   ## testcase tag
   content="$content
-    <testcase assertions=\"1\" name=\"$name\" time=\"$time\">
-    $failure
-    <system-out>
+    <testcase name=\"$name\" time=\"$time\" classname=\"$classname\">
+        $failure
+        <system-out>
 <![CDATA[
 $out
 ]]>
-    </system-out>
+        </system-out>
     </testcase>
   "
   ## testsuite block
-  cat <<EOF > "$juDIR/TEST-$suite.xml"
-  <testsuite failures="0" assertions="$asserts" name="$suite" tests="1" errors="$errors" time="$total">
-    $content
-  </testsuite>
-EOF
+  juLogRefreshFile
 
   return $evErr
 }

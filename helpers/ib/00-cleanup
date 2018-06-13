@@ -3,11 +3,10 @@
 # Test functions for phase 0
 #
 #########################
-setup_requirements()
+
+get_package_list()
 {
 	local host=$1
-	echo "Setting up needed packages on $host"
-
 	PACKAGE_LIST="opensm infiniband-diags rdma-ndd libibverbs-utils srp_daemon fabtests "
 	PACKAGE_LIST+="mpitests-mvapich2 mpitests-openmpi2 mpitests-mpich "
 	PACKAGE_LIST+="ibutils dapl-utils psmisc nfs-kernel-server "
@@ -21,7 +20,15 @@ setup_requirements()
 			PACKAGE_LIST="$PACKAGE_LIST mpitests-openmpi targetcli-fb "
 		;;
 	esac
-	tp $host "zypper install --no-confirm $PACKAGE_LIST"
+	echo $PACKAGE_LIST
+}
+
+setup_requirements()
+{
+	local host=$1
+	echo "Setting up needed packages on $host"
+
+	tp $host "zypper install --no-confirm $(get_package_list $host)"
 
 }
 
@@ -44,4 +51,17 @@ firewall_down()
 	# Take down the firewall as some tests requires more than SSH port to be open (openMPI, NFSoRDMA, etc.)
 	local host=$1
 	tp $host 'iptables -P INPUT ACCEPT && iptables --flush'
+}
+
+set_properties()
+{
+	local host=$1
+	PACKAGE_LIST=$(get_package_list $host)
+
+	for package in $PACKAGE_LIST; do
+		version=$(tpq $host "rpm -q $package")
+		juLogSetProperty $host.$package $version
+	done
+	kernel_version=$(tpq $host "uname -a")
+	juLogSetProperty $host.kernel "$kernel_version"
 }

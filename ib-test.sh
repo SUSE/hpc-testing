@@ -97,6 +97,8 @@ if [ "$HOST1" == "" -o "$HOST2" == "" ]; then
 	fatal_error "Missing host names"
 fi
 
+juLogSetProperty host1.name $HOST1
+juLogSetProperty host2.name $HOST2
 #########################
 #
 # Phase 0: State cleanup
@@ -124,6 +126,11 @@ phase_0(){
 
 }
 run_phase 0 phase_0 "State Cleanup"
+
+set_properties $HOST1
+set_properties $HOST2
+juLogSetProperty $HOST1.ib_ip $IP1
+juLogSetProperty $HOST2.ib_ip $IP2
 
 #########################
 #
