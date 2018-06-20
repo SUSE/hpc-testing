@@ -132,11 +132,15 @@ juLog() {
 
   # write the junit xml report
   ## failure tag
-  [ $err = 0 ] && failure="" || 
+  [ $err = 0 ] && failure="" ||
 		  failure="<failure type=\"ScriptError\" message=\"Script Error\"></failure>"
+  tcerr=""
+  if [ -n "$failure" ]; then
+  	tcerr="errors=\"1\""
+  fi
   ## testcase tag
   content="$content
-    <testcase name=\"$name\" time=\"$time\" classname=\"$classname\">
+    <testcase name=\"$name\" $tcerr time=\"$time\" classname=\"$classname\">
         $failure
         <system-out>
 <![CDATA[
