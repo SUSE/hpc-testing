@@ -133,7 +133,7 @@ juLog() {
   # write the junit xml report
   ## failure tag
   [ $err = 0 ] && failure="" ||
-		  failure="<failure type=\"ScriptError\" message=\"Script Error\"></failure>"
+		  failure="<failure type=\"ScriptError\" message=\"$name failed: $cmd\"></failure>"
   tcerr=""
   if [ -n "$failure" ]; then
   	tcerr="errors=\"1\""
