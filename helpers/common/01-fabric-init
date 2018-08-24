@@ -1,0 +1,11 @@
+
+setup_ssh()
+{
+	local host=$1
+	local remote_ip=$2
+
+	# Make sure we accepted the remote SSH key so MPI can work
+	tp $host "touch .ssh/known_hosts &&
+	   		  sed -i '/^$remote_ip /d' .ssh/known_hosts &&
+			  ssh-keyscan $remote_ip >> .ssh/known_hosts"
+}

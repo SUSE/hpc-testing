@@ -22,6 +22,7 @@ test_nfs()
 	   		   mkdir -p /tmp/RAM &&
 			   mount -o rdma,port=20049 $server_ip:/tmp/RAM /tmp/RAM &&
 			   (cat /proc/mounts | grep /tmp/RAM  | grep proto=rdma) &&
+			   sleep 1 &&
 			   dd if=/tmp/RAM/input bs=1M count=1024 of=/tmp/RAM/output &&
 			   diff -q /tmp/RAM/input /tmp/RAM/output"
 	tp $server "diff -q /tmp/RAM/input /tmp/RAM/output"
@@ -30,6 +31,7 @@ test_nfs()
 	tp $client "umount -f /tmp/RAM"
 	tp $server "exportfs -u -a &&
 	   		   systemctl stop nfs-server &&
+			   sleep 1 &&
 			   umount -f /tmp/RAM &&
 			   echo > /etc/exports"
 }
