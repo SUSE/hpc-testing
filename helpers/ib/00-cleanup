@@ -8,16 +8,17 @@ get_package_list()
 {
 	local host=$1
 	PACKAGE_LIST="opensm infiniband-diags rdma-ndd libibverbs-utils srp_daemon fabtests "
-	PACKAGE_LIST+="mpitests-mvapich2 mpitests-openmpi2 mpitests-mpich "
-	PACKAGE_LIST+="ibutils dapl-utils psmisc nfs-kernel-server "
-	PACKAGE_LIST+="nvme-cli nvmetcli "
+	PACKAGE_LIST+=" mpitests-mvapich2"
+	PACKAGE_LIST+=" ibutils dapl-utils psmisc nfs-kernel-server"
+	PACKAGE_LIST+=" nvme-cli nvmetcli bc"
 
 	case $(get_suse_version $host) in
 		15)
-			PACKAGE_LIST+="$PACKAGE_LIST python3-targetcli-fb "
+			PACKAGE_LIST+=" python3-targetcli-fb "
+			PACKAGE_LIST+=" mpitests-openmpi2 mpitests-mpich"
 		;;
-		42.3|12.3)
-			PACKAGE_LIST="$PACKAGE_LIST mpitests-openmpi targetcli-fb "
+		42.3|12.3|12.4)
+			PACKAGE_LIST+=" mpitests-openmpi targetcli-fb "
 		;;
 	esac
 	echo $PACKAGE_LIST
