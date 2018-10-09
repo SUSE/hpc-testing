@@ -64,6 +64,7 @@ cp -R helpers %{buildroot}/%{_datadir}/%{name}/
 %files
 %dir %{_datadir}/%{name}
 %doc NEWS
+%license LICENSE
 %{_datadir}/%{name}/ib-test.sh
 %{_datadir}/%{name}/helpers
 
