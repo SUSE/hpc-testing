@@ -1,3 +1,9 @@
+- hpc-testing 0.4.0
+  * Add GPLv3 to all scripts
+  * .gitignore: Ignore test results
+  * ib-test: Disable opemmpi[23] and mpich testing for SLE12SP4
+  * helpers: ib: fix package list for SLE12SP4
+  * Move test to common for shared functions
 - hpc-testing 0.3.0
   * improve the result reporting
   * Add NVME tests
