@@ -48,3 +48,23 @@ set_properties()
 	kernel_version=$(tpq $host "uname -a")
 	juLogSetProperty $host.kernel "$kernel_version"
 }
+
+get_common_package_list()
+{
+	local host=$1
+	PACKAGE_LIST="infiniband-diags rdma-ndd libibverbs-utils srp_daemon fabtests "
+	PACKAGE_LIST+=" mpitests-mvapich2"
+	PACKAGE_LIST+=" ibutils dapl-utils psmisc nfs-kernel-server"
+	PACKAGE_LIST+=" nvme-cli nvmetcli bc"
+
+	case $(get_suse_version $host) in
+		15|15.1)
+			PACKAGE_LIST+=" python3-targetcli-fb "
+			PACKAGE_LIST+=" mpitests-openmpi2 mpitests-mpich"
+		;;
+		42.3|12.3|12.4)
+			PACKAGE_LIST+=" mpitests-openmpi targetcli-fb "
+		;;
+	esac
+	echo $PACKAGE_LIST " "
+}
