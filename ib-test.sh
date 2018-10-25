@@ -31,6 +31,7 @@ export IP2=${IP2:-$DEFAULT_IP2}
 export HOST1=
 export HOST2=
 export DO_MAD=1
+export IN_VM=0
 
 source $(dirname $0)/helpers/common.sh
 load_helpers $(dirname $0) "common"
@@ -50,6 +51,7 @@ usage(){
 	echo "  -I, --ipoib <mode>[,<mode>...] Comma separated list of IPoIB mode to test (default is $DEFAULT_IPOIB_MODES)"
 	echo "                                 Note that connected mod emaybe autop disabled if the HW does not support it"
 	echo "  -n, --no-mad                   Disable test that requires MAD support. Needed for testing over SR-IOV"
+	echo "      --in-vm                    Test is being run in a virtual machine"
 }
 
 while [ $# -ne 0 ]; do
@@ -88,6 +90,9 @@ while [ $# -ne 0 ]; do
 			;;
 		-n|--no-mad)
 			DO_MAD=0
+			;;
+		--in-vm)
+			IN_VM=1
 			;;
 		--help|-h)
 			usage $0
