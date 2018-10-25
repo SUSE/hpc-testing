@@ -26,12 +26,12 @@ test_ibv_pingpong()
 	local hca2=$6
 	local ibport2=$7
 
-	tp $host2 "$testname -d $hca2 -i $ibport2" &
+	tp $host2 "$testname -g 0 -d $hca2 -i $ibport2" &
 	# Do a random sleep on the remote host so in case SSH is very slow we don't have
 	# hardcoded sleep value
 	tp $host2 "sleep 2"
 	sleep 2
-	tp $host1 "$testname -d $hca1 -i $ibport1 $host2"
+	tp $host1 "$testname -g 0 -d $hca1 -i $ibport1 $host2"
 
 	wait
 }
