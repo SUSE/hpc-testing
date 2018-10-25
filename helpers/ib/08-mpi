@@ -31,5 +31,11 @@ test_mpi()
 			;;
 	esac
 	RUN_ARGS="--host $ip1,$ip2 -np 2 ${RUN_ARGS}"
-	tp $host "VERBOSE=1 RUN_ARGS='$RUN_ARGS' SHORT=1 /usr/lib64/mpi/gcc/$flavor/tests/runtests.sh"
+	ENV_ARGS=""
+	if [ "$IN_VM" == "1" ]; then
+		# MVAPICH2 fails to use process affinity as core are reported with weird IDs
+		# Disable affinity in VMs to work around this
+		ENV_ARGS="MV2_ENABLE_AFFINITY=0 "
+	fi
+	tp $host "$ENV_ARGS VERBOSE=1 RUN_ARGS='$RUN_ARGS' SHORT=1 /usr/lib64/mpi/gcc/$flavor/tests/runtests.sh"
 }
