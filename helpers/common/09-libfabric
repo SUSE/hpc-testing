@@ -19,8 +19,7 @@ test_libfabric()
 	local host=$1
 	local server_ip=$2
 	local client_ip=$3
-	# Ignore tests which are broken upstream
-	IGNORED_
+
 	tp $host "/usr/bin/runfabtests.sh -v -t short -e 'fi_rma_bw,fi_rdm_cntr_pingpong' verbs $server_ip $client_ip"
 	# Note for later: starting from fabtest v1.6,
 	# - the fi_ prefix for exclusion need to be removed
