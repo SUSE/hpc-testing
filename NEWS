@@ -1,3 +1,7 @@
+  * Add -g 0 option to fix ibv tests on SRIOV
+  * Replace iptable fiddling with SuSEfirewall2 stop
+  * Add option for VMs to workaround mvapich2 glitch
+  * Add basic rxe testsuite
 - hpc-testing 0.4.0
   * Add GPLv3 to all scripts
   * .gitignore: Ignore test results
