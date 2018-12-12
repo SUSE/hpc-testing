@@ -55,7 +55,7 @@ get_common_package_list()
 	PACKAGE_LIST="infiniband-diags rdma-ndd libibverbs-utils srp_daemon fabtests "
 	PACKAGE_LIST+=" mpitests-mvapich2"
 	PACKAGE_LIST+=" ibutils dapl-utils psmisc nfs-kernel-server"
-	PACKAGE_LIST+=" nvme-cli nvmetcli bc"
+	PACKAGE_LIST+=" nvme-cli nvmetcli bc iputils"
 
 	case $(get_suse_version $host) in
 		15|15.1)
