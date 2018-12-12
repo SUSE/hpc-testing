@@ -29,7 +29,7 @@ get_package_list()
 	PACKAGE_LIST+=" nvme-cli nvmetcli bc"
 
 	case $(get_suse_version $host) in
-		15)
+		15|15.1)
 			PACKAGE_LIST+=" python3-targetcli-fb "
 			PACKAGE_LIST+=" mpitests-openmpi2 mpitests-mpich"
 		;;
