@@ -2,6 +2,8 @@
   * Replace iptable fiddling with SuSEfirewall2 stop
   * Add option for VMs to workaround mvapich2 glitch
   * Add basic rxe testsuite
+  * Add support for SLES15SP1
+  * Add proper --in-vm option
 - hpc-testing 0.4.0
   * Add GPLv3 to all scripts
   * .gitignore: Ignore test results
