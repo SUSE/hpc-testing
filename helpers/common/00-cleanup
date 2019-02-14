@@ -33,7 +33,7 @@ firewall_down()
 {
 	# Take down the firewall as some tests requires more than SSH port to be open (openMPI, NFSoRDMA, etc.)
 	local host=$1
-	tp $host 'systemctl stop SuSEfirewall2; true'
+	tp $host 'systemctl stop SuSEfirewall2 || true'
 }
 
 set_properties()
