@@ -49,7 +49,7 @@ usage(){
 	echo "      --ip2 <ip>                 IP for IPoIB on host2 (default is $DEFAULT_IP2)"
 	echo "  -M, --mpi <mpi>[,<mpi>...]     Comma separated list of MPI flavours to test (default is $DEFAULT_MPI_FLAVOURS)"
 	echo "  -I, --ipoib <mode>[,<mode>...] Comma separated list of IPoIB mode to test (default is $DEFAULT_IPOIB_MODES)"
-	echo "                                 Note that connected mod emaybe autop disabled if the HW does not support it"
+	echo "                                 Note that connected mode maybe auto disabled if the HW does not support it"
 	echo "  -n, --no-mad                   Disable test that requires MAD support. Needed for testing over SR-IOV"
 	echo "      --in-vm                    Test is being run in a virtual machine"
 }
