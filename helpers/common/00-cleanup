@@ -40,9 +40,11 @@ set_properties()
 {
 	local host=$1
 	PACKAGE_LIST=$(get_package_list $host)
+	VERSIONS=$(tpq $host "rpm -q --qf '%{NAME} %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\\n' $PACKAGE_LIST")
 
-	for package in $PACKAGE_LIST; do
-		version=$(tpq $host "rpm -q $package")
+	echo "$VERSIONS" | while read line; do 
+		  package=$(echo $line | awk '{print $1}')
+		  version=$(echo $line | awk '{print $2}')
 		juLogSetProperty $host.$package $version
 	done
 	kernel_version=$(tpq $host "uname -a")
