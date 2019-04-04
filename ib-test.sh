@@ -169,7 +169,7 @@ phase_1_1(){
 	if [ $DO_MAD -eq 1 ]; then
 		juLog_fatal -name=h1_openSM_start "start_opensm $HOST1 -p 10"
 		# Leave some time for openSM to bring the link up
-		sleep 10
+		sleep 30
 	fi
 }
 run_phase 1 phase_1_1 "Fabric init (1/2)"
