@@ -64,7 +64,7 @@ get_common_package_list()
 			PACKAGE_LIST+=" python3-targetcli-fb "
 			PACKAGE_LIST+=" mpitests-openmpi2 mpitests-mpich"
 		;;
-		42.3|12.3|12.4)
+		42.3|12.3|12.4|12.5)
 			PACKAGE_LIST+=" mpitests-openmpi targetcli-fb "
 		;;
 	esac
