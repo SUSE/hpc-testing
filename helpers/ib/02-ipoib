@@ -33,6 +33,7 @@ set_ipoib_up()
 	local ipaddr=$3 #ip/netmask
 
 	tp $host "ip link set dev $port up &&
+			  ip addr flush $port &&
 			  ip addr add $ipaddr dev $port"
 }
 set_ipoib_down()
@@ -43,7 +44,16 @@ set_ipoib_down()
 	tp $host "ip link set dev $port down &&
 	   		  ip addr flush $port"
 }
-
+disable_enhanced()
+{
+	local host=$1
+	tp $host "rmmod mlx5_ib && modprobe mlx5_ib ipoib_enhanced=0"
+}
+enable_enhanced()
+{
+	local host=$1
+	tp $host "rmmod mlx5_ib && modprobe mlx5_ib ipoib_enhanced=1"
+}
 test_ping()
 {
 	local host=$1
@@ -79,4 +89,12 @@ is_connected_supported()
 	else
 		return 1
 	fi
+}
+
+is_enhanced_mode_togglable()
+{
+	local host=$1
+
+	tpq $host 'test -f /sys/module/mlx5_ib/parameters/ipoib_enhanced'
+	return $?
 }
