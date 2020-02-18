@@ -34,6 +34,7 @@ firewall_down()
 	# Take down the firewall as some tests requires more than SSH port to be open (openMPI, NFSoRDMA, etc.)
 	local host=$1
 	tp $host 'systemctl stop SuSEfirewall2 || true'
+	tp $host 'systemctl stop firewalld || true'
 }
 
 set_properties()
@@ -63,10 +64,15 @@ get_common_package_list()
 		15|15.1)
 			PACKAGE_LIST+=" python3-targetcli-fb "
 			PACKAGE_LIST+=" mpitests-openmpi2 mpitests-mpich"
-		;;
+			;;
+		15.2)
+			PACKAGE_LIST+=" python3-targetcli-fb "
+			PACKAGE_LIST+=" mpitests-openmpi2 mpitests-mpich"
+			PACKAGE_LIST+=" mpitests-openmpi3"
+			;;
 		42.3|12.3|12.4|12.5)
 			PACKAGE_LIST+=" mpitests-openmpi targetcli-fb "
-		;;
+			;;
 	esac
 	echo $PACKAGE_LIST " "
 }

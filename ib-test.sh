@@ -19,7 +19,7 @@ DEFAULT_START_PHASE=0
 DEFAULT_END_PHASE=999
 DEFAULT_IP1=192.168.0.1
 DEFAULT_IP2=192.168.0.2
-DEFAULT_MPI_FLAVOURS="mvapich2,mpich,openmpi,openmpi2"
+DEFAULT_MPI_FLAVOURS="mvapich2,mpich,openmpi,openmpi2,openmpi3"
 DEFAULT_IPOIB_MODES="connected,datagram"
 
 export START_PHASE=${START_PHASE:-$DEFAULT_START_PHASE}
@@ -299,6 +299,11 @@ run_phase 7 phase_7 "RDMA/Verbs"
 phase_8(){
 	case $(get_suse_version $HOST1) in
 		15|15.1)
+			juLog -name=mpitests_skipping_openmpi 'echo "WARNING: Disabling OpenMPI[13] for SLE15"'
+			MPI_FLAVOURS=$(echo $MPI_FLAVOURS | sed -e 's/openmpi,//g' -e 's/openmpi$//g' |
+							   sed -e 's/openmpi3,//g' -e 's/openmpi3$//g')
+			;;
+		15.2)
 			juLog -name=mpitests_skipping_openmpi 'echo "WARNING: Disabling OpenMPI for SLE15"'
 			MPI_FLAVOURS=$(echo $MPI_FLAVOURS | sed -e 's/openmpi,//g' -e 's/openmpi$//g')
 			;;
