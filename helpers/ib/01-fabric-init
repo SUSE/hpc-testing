@@ -41,7 +41,7 @@ get_port()
 	local host=$1
 	local host_id=$2
 
-	res=$(tpq $host '(boards=$(/usr/sbin/ibstat -l | sort);
+	res=$(tpq $host '(boards=$(/usr/sbin/ibstat -l | sort -V);
 ip_count=0;
 for board in $boards; do
 	port_count=$(/usr/sbin/ibstat $board -p | wc -l);
