@@ -1,0 +1,6 @@
+This is a branchout of hpc-testing. As such this is aiming at adding
+some user-space HPC tests. Those might not be suitable for the hpc-testing
+upstream project, so for now those tests are kept here.
+
+Eventually this might be a separate project or - if desired and reasonable -
+could be merged into hpc-testing.
