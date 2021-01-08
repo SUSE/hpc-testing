@@ -38,6 +38,6 @@ reset_all_ports()
 	local host=$1
 
 	tp $host 'for port_guid in $(ibstat -p); do
-	   		 	   ibportstate -G $port_guid reset;
+	   		 	   ibportstate -G $port_guid reset || true;
 			   done'
 }
