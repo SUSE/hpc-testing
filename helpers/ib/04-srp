@@ -51,7 +51,7 @@ test_srp()
 				modprobe ib_srp &&
 				mkdir /tmp/srp-hpc-test &&
 				(ibsrpdm -c | grep "dgid='$server_wwn'";
-				 ibsrpdm -c | grep "dgid='$server_sys_wwn'" | sed -e "s/'$server_sysguid'/'$server_guid'/g") > /sys/class/infiniband_srp/srp-'$client_board'-'$client_port'/add_target &&
+				 ibsrpdm -c | grep "dgid='$server_sys_wwn'" | sed -e "s/'$server_sysguid'/'$server_guid'/g" | true) > /sys/class/infiniband_srp/srp-'$client_board'-'$client_port'/add_target &&
 				sleep 1 &&
 				block_device=$(ls /sys/class/infiniband/'$client_board'/device/host*/target*/*:*/block) &&
 				mount /dev/$block_device /tmp/srp-hpc-test &&
