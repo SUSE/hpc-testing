@@ -225,8 +225,12 @@ phase_2(){
 	   fi
 	   reload_driver=1
 	   # IPoIB Ifs are reconfigured right after that. No need to to it here
+	   juLog -name=h1_disabled_enhanced_kill_opensm "kill_opensm $HOST1"
 	   juLog -name=h1_disable_enhanced "disable_enhanced $HOST1"
 	   juLog -name=h2_disable_enhanced "disable_enhanced $HOST2"
+	   if [ $DO_MAD -eq 1 ]; then
+		   juLog -name=h1_disabled_enhanced_start_opensm "start_opensm $HOST1 -p 10"
+	   fi
 	fi
 
 	for mode in $(echo $IPOIB_MODES | sed -e 's/,/ /g'); do
@@ -250,8 +254,12 @@ phase_2(){
 	done
 	if [ $reload_driver -eq 1 ]; then
 		# Put the driver back in enhanced mode and make sure IPoIB Ifs are reocnfigured
+	   juLog -name=h1_enable_enhanced_kill_opensm "kill_opensm $HOST1"
 	   juLog -name=h1_enable_enhanced "enable_enhanced $HOST1 && set_ipoib_up $HOST1 $IPPORT1 $IP1/24"
 	   juLog -name=h2_enable_enhanced "enable_enhanced $HOST2 && set_ipoib_up $HOST2 $IPPORT2 $IP2/24"
+	   if [ $DO_MAD -eq 1 ]; then
+		   juLog -name=h1_enabled_enhanced_start_opensm "start_opensm $HOST1 -p 10"
+	   fi
 	fi
 }
 run_phase 2 phase_2 "IPoIB"
