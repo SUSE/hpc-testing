@@ -1,9 +1,11 @@
+- hpc-testing 0.5.0
   * Add -g 0 option to fix ibv tests on SRIOV
   * Replace iptable fiddling with SuSEfirewall2 stop
   * Add option for VMs to workaround mvapich2 glitch
   * Add basic rxe testsuite
-  * Add support for SLES15SP1
+  * Add support for SLES15SP[123]
   * Add proper --in-vm option
+  * Many minor fixes
 - hpc-testing 0.4.0
   * Add GPLv3 to all scripts
   * .gitignore: Ignore test results
