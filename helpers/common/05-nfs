@@ -1,5 +1,5 @@
 # hpc-testing
-# Copyright (C) 2018 SUSE LLC
+# Copyright (C) 2018-2022 SUSE LLC
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ test_nfs()
 	   		   systemctl stop nfs-server &&
 			   (! (mount | grep /tmp/RAM) || umount -f /tmp/RAM) &&
 			   mkdir -p /tmp/RAM && mount -t tmpfs -o size=2G tmpfs /tmp/RAM &&
-			   echo '/tmp/RAM   $subnet/255.255.255.0(fsid=0,rw,async,insecure,no_root_squash)'> /etc/exports &&
+			   echo '/tmp/RAM   $subnet/255.255.255.0(fsid=0,rw,async,insecure,no_root_squash,no_subtree_check)'> /etc/exports &&
 			   systemctl start nfs-server &&
 			   modprobe svcrdma &&
 			   echo 'rdma 20049' > /proc/fs/nfsd/portlist &&
