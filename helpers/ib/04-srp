@@ -1,5 +1,5 @@
 # hpc-testing
-# Copyright (C) 2018 SUSE LLC
+# Copyright (C) 2022 SUSE LLC
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,6 +29,11 @@ test_srp()
 	local client_wwn="0000000000000000${client_guid}"
 	local client_board=$8
 	local client_port=$9
+
+	# Make sure srp_daemon works (bsc#1195874)
+	tp $client "systemctl stop srp_daemon_port@${client_board}:${client_port} || true"
+	tp $client 'systemctl restart srp_daemon; sleep 2'
+	tp $client "systemctl status srp_daemon_port@${client_board}:${client_port}"
 
 	# Cleanup old stuff
 	tp $client 'rmmod ib_srp || true'

@@ -1,5 +1,5 @@
 # hpc-testing
-# Copyright (C) 2018 SUSE LLC
+# Copyright (C) 2022 SUSE LLC
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -65,10 +65,15 @@ get_common_package_list()
 			PACKAGE_LIST+=" python3-targetcli-fb "
 			PACKAGE_LIST+=" mpitests-openmpi2 mpitests-mpich"
 			;;
-		15.2|15.3|15.4)
+		15.2|15.3)
 			PACKAGE_LIST+=" python3-targetcli-fb "
 			PACKAGE_LIST+=" mpitests-openmpi2 mpitests-mpich"
 			PACKAGE_LIST+=" mpitests-openmpi3"
+			;;
+		15.4)
+			PACKAGE_LIST+=" python3-targetcli-fb "
+			PACKAGE_LIST+=" mpitests-openmpi2 mpitests-mpich"
+			PACKAGE_LIST+=" mpitests-openmpi3 mpitests-openmpi4"
 			;;
 		42.3|12.3|12.4|12.5)
 			PACKAGE_LIST+=" mpitests-openmpi targetcli-fb "

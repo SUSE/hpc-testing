@@ -1,6 +1,6 @@
 #!/bin/bash
 # hpc-testing
-# Copyright (C) 2018 SUSE LLC
+# Copyright (C) 2022 SUSE LLC
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@ DEFAULT_START_PHASE=0
 DEFAULT_END_PHASE=999
 DEFAULT_IP1=192.168.0.1
 DEFAULT_IP2=192.168.0.2
-DEFAULT_MPI_FLAVOURS="mvapich2,mpich,openmpi,openmpi2,openmpi3"
+DEFAULT_MPI_FLAVOURS="mvapich2,mpich,openmpi,openmpi2,openmpi3,openmpi4"
 DEFAULT_IPOIB_MODES="connected,datagram"
 
 export START_PHASE=${START_PHASE:-$DEFAULT_START_PHASE}
@@ -329,18 +329,25 @@ run_phase 7 phase_7 "RDMA/Verbs"
 phase_8(){
 	case $(get_suse_version $HOST1) in
 		15|15.1)
-			juLog -name=mpitests_skipping_openmpi 'echo "WARNING: Disabling OpenMPI[13] for SLE15"'
+			juLog -name=mpitests_skipping_openmpi 'echo "WARNING: Disabling OpenMPI[134] for SLE15.[01]"'
 			MPI_FLAVOURS=$(echo $MPI_FLAVOURS | sed -e 's/openmpi,//g' -e 's/openmpi$//g' |
-							   sed -e 's/openmpi3,//g' -e 's/openmpi3$//g')
+							   sed -e 's/openmpi3,//g' -e 's/openmpi3$//g' |
+							   sed -e 's/openmpi4,//g' -e 's/openmpi4$//g')
 			;;
-		15.2)
-			juLog -name=mpitests_skipping_openmpi 'echo "WARNING: Disabling OpenMPI for SLE15"'
+		15.2|15.3)
+			juLog -name=mpitests_skipping_openmpi 'echo "WARNING: Disabling OpenMPI[14] for SLE15.[23]"'
+			MPI_FLAVOURS=$(echo $MPI_FLAVOURS | sed -e 's/openmpi,//g' -e 's/openmpi$//g' |
+							   sed -e 's/openmpi4,//g' -e 's/openmpi4$//g')
+			;;
+		15.4)
+			juLog -name=mpitests_skipping_openmpi 'echo "WARNING: Disabling OpenMPI for SLE15.4"'
 			MPI_FLAVOURS=$(echo $MPI_FLAVOURS | sed -e 's/openmpi,//g' -e 's/openmpi$//g')
 			;;
 		12.3|12.4|12.5)
-			juLog -name=mpitests_skipping_openmpi 'echo "WARNING: Disabling OpenMPI[23] and mpich for SLE12SP[34]"'
+			juLog -name=mpitests_skipping_openmpi 'echo "WARNING: Disabling OpenMPI[234] and mpich for SLE12SP[34]"'
 			MPI_FLAVOURS=$(echo $MPI_FLAVOURS | sed -e 's/openmpi2,//g' -e 's/openmpi2$//g' |
 							   sed -e 's/openmpi3,//g' -e 's/openmpi3$//g' |
+							   sed -e 's/openmpi4,//g' -e 's/openmpi4$//g' |
 							   sed -e 's/mpich,//g' -e 's/mpich$//g')
 			;;
 		*)
