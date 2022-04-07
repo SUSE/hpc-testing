@@ -71,6 +71,7 @@ tpq()
 {
 	local ip=$1
 	local host="ssh:$ip"
+	local ret=0
 	shift
 
 	if tp_check_local $ip; then
@@ -79,12 +80,15 @@ tpq()
 			cd $HOME;
 			eval $@
 		)
+		ret=$?
 		set +e
 	else
 		set -e
 		twopence_command -t 300 -b $host "$@"
+		ret=$?
 		set +e
 	fi
+	return $ret
 }
 
 load_helpers()
