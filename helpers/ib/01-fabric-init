@@ -42,20 +42,26 @@ get_port()
 	local host_id=$2
 
 	res=$(tpq $host '(boards=$(/usr/sbin/ibstat -l | sort -V);
-ip_count=0;
 for board in $boards; do
 	port_count=$(/usr/sbin/ibstat $board -p | wc -l);
 	for port in $(seq 1 $port_count); do
 		res=$(/usr/sbin/ibstat $board $port);
 		status=$(echo "$res" | grep "State:" | awk "{print \$NF}");
 		if [ "$status" == "Active" ]; then
+			pci_id=$(basename $(readlink -f /sys/class/infiniband/mlx5_0/device));
+			for netif in $(ls /sys/class/net); do
+				netif_pci_id=$(basename $(readlink -f /sys/class/net/$netif/device));
+				if [ "$pci_id" == "$netif_pci_id" ]; then
+				   ipoib_if=$netif;
+				   break;
+				fi;
+			done;
 			guid=$(echo "$res" | grep "Port GUID:" | awk "{print \$NF}");
 			lid=$(echo "$res" | grep "Base lid:" | awk "{print \$NF}");
 			sysguid=$(ibstat $board | grep "System image GUID:" | awk "{print \$NF}");
-			echo "ib$ip_count $guid $lid $board $port $sysguid";
+			echo "$ipoib_if $guid $lid $board $port $sysguid";
 			exit 0;
 		fi;
-		ip_count=$(expr $ip_count + 1);
 	done;
 done
 )')
