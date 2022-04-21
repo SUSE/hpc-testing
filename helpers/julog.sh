@@ -71,12 +71,10 @@ juLogClean() {
 juLog() {
 
   # parse arguments
-  local ya="" icase="" name="" ereg="" icase="" cmd=""
+  local ya="" icase="" name="" icase="" cmd=""
   while [ -z "$ya" ]; do
     case "$1" in
       -name=*)   name=$asserts-`echo "$1" | sed -e 's/-name=//'`;   shift;;
-      -ierror=*) ereg=`echo "$1" | sed -e 's/-ierror=//'`; icase="-i"; shift;;
-      -error=*)  ereg=`echo "$1" | sed -e 's/-error=//'`;  shift;;
       *)         ya=1;;
     esac
   done
@@ -99,9 +97,7 @@ juLog() {
   outf=/var/tmp/ju$$.txt
   >$outf
   echo ""                         | tee -a $outf
-  echo "+++ Running case: $name " | tee -a $outf
-  echo "+++ working dir: "`pwd`   | tee -a $outf
-  echo "+++ command: $cmd"        | tee -a $outf
+  echo "[RUNNING][$suite][$name] $cmd" | tee -a $outf
   ini=`date +%s.%N`
   if [ "$VERBOSE" != "" ]; then
 	  eVal "$cmd" 2>&1 | tee -a $outf
@@ -112,16 +108,7 @@ juLog() {
   rm -f $errfile
   end=`date +%s.%N`
   echo "+++ exit code: $evErr"    | tee -a $outf
-
-  # set the appropriate error, based in the exit code and the regex
   [ $evErr != 0 ] && err=1 || err=0
-  out=`cat $outf | sed -e 's/^\([^+]\)/| \1/g'`
-  if [ $err = 0 -a -n "$ereg" ]; then
-      H=`echo "$out" | egrep $icase "$ereg"`
-      [ -n "$H" ] && err=1
-  fi
-  echo "+++ error: $err"         | tee -a $outf
-  rm -f $outf
 
   # calculate vars
   asserts=`expr $asserts + 1`
@@ -157,10 +144,10 @@ $out
 juLog_summary()
 {
 	if [ $? -eq 0 -a $errors -eq 0 ]; then
-		echo "[SUCCESS] Testsuite summary: tests=$asserts errors=$errors time=$total"
+		echo "[SUCCESS][$suite] Testsuite summary: tests=$asserts errors=$errors time=$total"
 		exit 0
 	else
-		echo "[FAILURE] Testsuite summary: tests=$asserts errors=$errors time=$total"
+		echo "[FAILURE][$suite] Testsuite summary: tests=$asserts errors=$errors time=$total"
 		exit 1
 	fi
 }
@@ -169,7 +156,7 @@ trap juLog_summary EXIT
 juLog_fatal() {
 	juLog "$@"
 	if [ $? -ne 0 ]; then
-		echo "[ERROR] Fatal failure. Exiting..." >&2
+		echo "[ERROR][$suite] Fatal failure. Exiting..." >&2
 		exit 1
 	fi
 }

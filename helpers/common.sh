@@ -25,6 +25,16 @@ fatal_error()
 	exit 1
 }
 
+ip_addr_show_to_ip()
+{
+	 grep inet /dev/stdin  | grep -v inet6 | sed -e 's/.*inet \([0-9.]*\)\/\?.*$/\1/'
+}
+ip_addr_show_to_dev()
+{
+	local ip=$1
+	grep inet /dev/stdin  | grep -v inet6 | grep $ip | awk '{ print $NF}'
+}
+
 tp_check_local()
 {
 	local host=$1
@@ -71,6 +81,7 @@ tpq()
 {
 	local ip=$1
 	local host="ssh:$ip"
+	local ret=0
 	shift
 
 	if tp_check_local $ip; then
@@ -79,12 +90,15 @@ tpq()
 			cd $HOME;
 			eval $@
 		)
+		ret=$?
 		set +e
 	else
 		set -e
 		twopence_command -t 300 -b $host "$@"
+		ret=$?
 		set +e
 	fi
+	return $ret
 }
 
 load_helpers()
@@ -132,4 +146,77 @@ get_suse_version(){
 	fi
 	echo ${!varname}
 	return 0
+}
+
+#####################
+# Phase parsing stuff
+#####################
+DEFAULT_START_PHASE=0
+DEFAULT_END_PHASE=999
+
+export START_PHASE=${START_PHASE:-$DEFAULT_START_PHASE}
+export END_PHASE=${END_PHASE:-$DEFAULT_END_PHASE}
+export IN_VM=0
+export HOST1=
+export HOST2=
+
+common_usage(){
+	echo "  -h, --help                     Display usage"
+	echo "  -s, --start-phase              Phase to start from (default is $DEFAULT_START_PHASE)"
+	echo "  -e, --end-phase                Phase to stop at (default is $DEFAULT_END_PHASE)"
+	echo "  -p, --phase <#phase>           Launch only this phase"
+	echo "  -v, --verbose                  Display test logs in console."
+	echo "      --in-vm                    Test is being run in a virtual machine"
+
+}
+
+common_parse(){
+	case $1 in
+		-s|--start-phase)
+			START_PHASE=$2
+			return 2
+			;;
+		-e|--end-phase)
+			END_PHASE=$2
+			return 2
+			;;
+		-p|--phase)
+			START_PHASE=$2
+			END_PHASE=$2
+			return 2
+			;;
+		-v|--verbose)
+			export VERBOSE=1
+			return 1
+			;;
+		--in-vm)
+			IN_VM=1
+			return 1
+			;;
+		--help|-h)
+			usage $0
+			exit 1
+			;;
+		[0-9]*.[0-9]*.[0-9]*.[0-9]*)
+			if [ "$HOST1" == "" ]; then
+				HOST1=$1
+				return 1
+			elif [ "$HOST2" == "" ]; then
+				HOST2=$1
+				return 1
+			else
+				fatal_error "Too many host ip provided '$2'"
+			fi
+			;;
+		*)
+			return 0
+			;;
+	esac
+}
+
+common_check(){
+	if [ "$HOST1" == "" -o "$HOST2" == "" ]; then
+		usage $0
+		fatal_error "Missing host names"
+	fi
 }

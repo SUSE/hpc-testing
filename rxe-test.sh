@@ -15,21 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-DEFAULT_START_PHASE=0
-DEFAULT_END_PHASE=999
-DEFAULT_MPI_FLAVOURS="mvapich2,mpich,openmpi,openmpi2"
 DEFAULT_IPPORT1=eth0
 DEFAULT_IPPORT2=eth0
 
-export START_PHASE=${START_PHASE:-$DEFAULT_START_PHASE}
-export END_PHASE=${END_PHASE:-$DEFAULT_END_PHASE}
-export MPI_FLAVOURS=${MPI_FLAVOURS:-$DEFAULT_MPI_FLAVOURS}
-export IPPORT1=${IPPORT1:-$DEFAULT_IPPORT1}
-export IPPORT2=${IPPORT2:-$DEFAULT_IPPORT2}
-export HOST1=
-export HOST2=
+export IPPORT1=""
+export IPPORT2=""
 export DO_MAD=0
-export IN_VM=0
 
 source $(dirname $0)/helpers/common.sh
 load_helpers $(dirname $0) "common"
@@ -38,35 +29,21 @@ load_helpers $(dirname $0) "rxe"
 usage(){
 	echo "Usage: ${0} [options] <host1> <host2>"
 	echo "Options:"
-	echo "  -h, --help                     Display usage"
-	echo "  -s, --start-phase              Phase to start from (default is $DEFAULT_START_PHASE)"
-	echo "  -e, --end-phase                Phase to stop at (default is $DEFAULT_END_PHASE)"
-	echo "  -p, --phase <#phase>           Launch only this phase"
-	echo "  -v, --verbose                  Display test logs in console."
+	common_usage
 	echo "      --eth1 <ifname>            Name of the IP interface to setup/use for RXE on host1 (default is $DEFAULT_IPPORT1)"
 	echo "      --eth2 <ifname>            Name of the IP interface to setup/use for RXE on host2 (default is $DEFAULT_IPPORT2)"
 	echo "  -M, --mpi <mpi>[,<mpi>...]     Comma separated list of MPI flavours to test (default is $DEFAULT_MPI_FLAVOURS)"
-	echo "      --in-vm                    Test is being run in a virtual machine"
 }
 
 while [ $# -ne 0 ]; do
+	common_parse $1 $2
+	ret=$?
+	if [ $ret -ne 0 ]; then
+		shift $ret
+		continue
+	fi
+
 	case $1 in
-		-s|--start-phase)
-			START_PHASE=$2
-			shift
-			;;
-		-e|--end-phase)
-			END_PHASE=$2
-			shift
-			;;
-		-p|--phase)
-			START_PHASE=$2
-			END_PHASE=$2
-			shift
-			;;
-		-v|--verbose)
-			VERBOSE=1
-			;;
 		--eth1)
 			IPPORT1=$2
 			shift
@@ -79,31 +56,26 @@ while [ $# -ne 0 ]; do
 			MPI_FLAVOURS=$2
 			shift
 			;;
-		--in-vm)
-			IN_VM=1
-			;;
-		--help|-h)
-			usage $0
-			exit 1
-			;;
-		[0-9]*.[0-9]*.[0-9]*.[0-9]*)
-			if [ "$HOST1" == "" ]; then
-				HOST1=$1
-			elif [ "$HOST2" == "" ]; then
-				HOST2=$1
-			else
-				fatal_error "Too many host ip provided '$2'"
-			fi
-			;;
 		*)
 			fatal_error "Unknow argument $1"
 			;;
 	esac
 	shift
 done
-if [ "$HOST1" == "" -o "$HOST2" == "" ]; then
-	usage $0
-	fatal_error "Missing host names"
+common_check
+
+if [ "$IPPORT1" == "" ]; then
+	export IPPORT1=$(tpq $HOST1 "ip addr" | ip_addr_show_to_dev $HOST1)
+fi
+if [ "$IPPORT1" == "" ]; then
+	fatal_error "No ethernet device specified or found for $HOST1"
+fi
+
+if [ "$IPPORT2" == "" ]; then
+	export IPPORT2=$(tpq $HOST2 "ip addr" | ip_addr_show_to_dev $HOST2)
+fi
+if [ "$IPPORT2" == "" ]; then
+	fatal_error "No ethernet device specified or found for $HOST2"
 fi
 
 juLogSetProperty host1.name $HOST1
@@ -155,12 +127,10 @@ run_phase 1 phase_1 "Fabric init"
 
 #########################
 #
-# Phase 2: Not Applicable
-#
-#########################
-#########################
-#
-# Phase 3: Not Applicable
+# Skipping these not applicable phases
+# Phase 2: IPoIB
+# Phase 3: SM Failover
+# Phase 4: SRP
 #
 #########################
 #########################
@@ -169,21 +139,16 @@ run_phase 1 phase_1 "Fabric init"
 #
 #########################
 phase_5(){
-	true
-	#juLog -name=nfs_over_rdma test_nfs $HOST1 $IP1 $HOST2
+	juLog -name=nfs_over_rdma test_nfs $HOST1 $IP1 $HOST2
 }
 run_phase 5 phase_5 "NFSoRDMA"
 
 #########################
 #
+# Not applicable
 # Phase 6: DAPL
 #
 #########################
-phase_6(){
-	true
-	#juLog -name=dapl -error='DAT_' test_dapl $HOST1 $IPPORT1 $HOST2 $IPPORT2 $IP2
-}
-run_phase 6 phase_6 "DAPL"
 
 #########################
 #
@@ -194,7 +159,7 @@ phase_7(){
 	for mode in rc uc ud srq; do
 		export IBV_EXTRA_OPTS=""
 		if [ "$mode" == "ud" ]; then
-			IBV_EXTRA_OPTS="-s 1450"
+			IBV_EXTRA_OPTS="-s 1024"
 		fi
 		juLog -name=${mode}_pingpong "(
 	  	  test_ibv_pingpong ibv_${mode}_pingpong $HOST1 $HCA1 $IBPORT1 $HOST2 $HCA2 $IBPORT2 &&
@@ -210,25 +175,82 @@ run_phase 7 phase_7 "RDMA/Verbs"
 #
 #########################
 phase_8(){
-	case $(get_suse_version $HOST1) in
-		15)
-			juLog -name=mpitests_skipping_openmpi 'echo "WARNING: Disabling OpenMPI for SLE15"'
-			MPI_FLAVOURS=$(echo $MPI_FLAVOURS | sed -e 's/openmpi,//g' -e 's/openmpi$//g')
-			;;
-		12.3|12.4|12.5)
-			juLog -name=mpitests_skipping_openmpi 'echo "WARNING: Disabling OpenMPI[23] and mpich for SLE12SP[34]"'
-			MPI_FLAVOURS=$(echo $MPI_FLAVOURS | sed -e 's/openmpi2,//g' -e 's/openmpi2$//g' |
-							   sed -e 's/openmpi3,//g' -e 's/openmpi3$//g' |
-							   sed -e 's/mpich,//g' -e 's/mpich$//g')
-			;;
-		*)
-			# N/A
-			true
-			;;
-	esac
-	for flavour in $(echo $MPI_FLAVOURS | sed -e 's/,/ /g'); do
-
+	FLAVOURS=$(mpi_get_flavors $HOST1 $MPI_FLAVOURS)
+	# Right now, it seems only OpenMPI2 works fine with RXE
+	FLAVOURS=$(mpi_filter_flavour $FLAVOURS mpich mvapich2 openmpi3 openmpi4 openmpi)
+	for flavour in $(echo $FLAVOURS | sed -e 's/,/ /g'); do
 		juLog -name=mpitests_${flavour} test_mpi ${flavour} $HOST1 $IP1 $IP2
 	done
 }
 run_phase 8 phase_8 "MPI"
+
+#########################
+#
+# Too much unsupported tests
+# Phase 9: libfabric
+#
+#########################
+
+
+#########################
+#
+# Phase 10: NVMEoF
+#
+#########################
+
+test_nvme(){
+	local server=$1
+	local server_ip=$2
+	local client=$3
+
+
+	# Cleanup old stuff just in case
+	tp $client "mount | grep /dev/nvme | awk '{ print \$1}' | xargs -I - umount - 2>/dev/null || true;
+	   		    nvme disconnect -n testnq || true"
+
+	cat helpers/ib/nvmet.json | tpq $server 'cat > hpc-nvmet.json'
+
+	tp $server 'umount /tmp/hpc-test.mount 2>/dev/null || true;
+	   		    rm -Rf /tmp/hpc-test.mount /tmp/hpc-test.io 2>/dev/null || true;
+	   		   	losetup -a | grep hpc-test.io | sed -e s/:.*// | xargs losetup -d || true;
+				modprobe nvmet;
+				nvmetcli clear || true;
+				modprobe nvmet_rdma &&
+				LOOPD=$(losetup -f) &&
+				dd if=/dev/zero of=/tmp/hpc-test.io bs=1M count=256 &&
+				losetup ${LOOPD} /tmp/hpc-test.io &&
+				mkfs.ext3 ${LOOPD} &&
+				mkdir /tmp/hpc-test.mount/ &&
+				mount ${LOOPD} /tmp/hpc-test.mount/ &&
+				dd if=/dev/urandom bs=1M count=64 of=/tmp/hpc-test.mount/input &&
+				umount  /tmp/hpc-test.mount &&
+				sed -i -e s/@MYIP@/'$server_ip'/ -e s%@BLK@%${LOOPD}% hpc-nvmet.json &&
+				nvmetcli restore hpc-nvmet.json'
+
+	tp $client 'umount /tmp/srp-hpc-test 2>/dev/null || true;
+	   		    rm -Rf /tmp/srp-hpc-test 2>/dev/null || true;
+				modprobe nvme_rdma &&
+				mkdir /tmp/srp-hpc-test &&
+				rm -f /etc/nvme/hostid &&
+				nvme discover -t rdma -a '$server_ip' -s 4420 &&
+				nvme connect -t rdma -n testnqn -a '$server_ip' -s 4420 &&
+				block_device=$(lsblk | grep nvme | awk "{ print \$1}") &&
+				echo $block_device &&
+				mount /dev/$block_device /tmp/srp-hpc-test &&
+				cp -R /tmp/srp-hpc-test/input /tmp/srp-hpc-test/output &&
+				diff -q /tmp/srp-hpc-test/input /tmp/srp-hpc-test/output&&
+				umount /tmp/srp-hpc-test &&
+				nvme disconnect -n testnqn &&
+				! (lsblk | grep nvme)'
+
+	tp $server 'nvmetcli clear &&
+	   		    mount -o loop /tmp/hpc-test.io /tmp/hpc-test.mount &&
+			   	diff -q /tmp/hpc-test.mount/input /tmp/hpc-test.mount/output &&
+				umount /tmp/hpc-test.mount &&
+				losetup -a | grep hpc-test.io | sed -e s/:.*// | xargs losetup -d'
+}
+
+phase_10(){
+	juLog -name=nvme test_nvme $HOST2 $IP2 $HOST1
+}
+run_phase 10 phase_10 "nvme"

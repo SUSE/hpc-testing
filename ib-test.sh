@@ -15,23 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-DEFAULT_START_PHASE=0
-DEFAULT_END_PHASE=999
 DEFAULT_IP1=192.168.0.1
 DEFAULT_IP2=192.168.0.2
-DEFAULT_MPI_FLAVOURS="mvapich2,mpich,openmpi,openmpi2,openmpi3,openmpi4"
 DEFAULT_IPOIB_MODES="connected,datagram"
 
-export START_PHASE=${START_PHASE:-$DEFAULT_START_PHASE}
-export END_PHASE=${END_PHASE:-$DEFAULT_END_PHASE}
-export MPI_FLAVOURS=${MPI_FLAVOURS:-$DEFAULT_MPI_FLAVOURS}
 export IPOIB_MODES=${IPOIB_MODES:-$DEFAULT_IPOIB_MODES}
 export IP1=${IP1:-$DEFAULT_IP1}
 export IP2=${IP2:-$DEFAULT_IP2}
-export HOST1=
-export HOST2=
 export DO_MAD=1
-export IN_VM=0
 
 source $(dirname $0)/helpers/common.sh
 load_helpers $(dirname $0) "common"
@@ -40,38 +31,24 @@ load_helpers $(dirname $0) "ib"
 usage(){
 	echo "Usage: ${0} [options] <host1> <host2>"
 	echo "Options:"
-	echo "  -h, --help                     Display usage"
-	echo "  -s, --start-phase              Phase to start from (default is $DEFAULT_START_PHASE)"
-	echo "  -e, --end-phase                Phase to stop at (default is $DEFAULT_END_PHASE)"
-	echo "  -p, --phase <#phase>           Launch only this phase"
-	echo "  -v, --verbose                  Display test logs in console."
+	common_usage
 	echo "      --ip1 <ip>                 IP for IPoIB on host1 (default is $DEFAULT_IP1)"
 	echo "      --ip2 <ip>                 IP for IPoIB on host2 (default is $DEFAULT_IP2)"
 	echo "  -M, --mpi <mpi>[,<mpi>...]     Comma separated list of MPI flavours to test (default is $DEFAULT_MPI_FLAVOURS)"
 	echo "  -I, --ipoib <mode>[,<mode>...] Comma separated list of IPoIB mode to test (default is $DEFAULT_IPOIB_MODES)"
 	echo "                                 Note that connected mode maybe auto disabled if the HW does not support it"
 	echo "  -n, --no-mad                   Disable test that requires MAD support. Needed for testing over SR-IOV"
-	echo "      --in-vm                    Test is being run in a virtual machine"
 }
 
 while [ $# -ne 0 ]; do
+	common_parse $1 $2
+	ret=$?
+	if [ $ret -ne 0 ]; then
+		shift $ret
+		continue
+	fi
+
 	case $1 in
-		-s|--start-phase)
-			START_PHASE=$2
-			shift
-			;;
-		-e|--end-phase)
-			END_PHASE=$2
-			shift
-			;;
-		-p|--phase)
-			START_PHASE=$2
-			END_PHASE=$2
-			shift
-			;;
-		-v|--verbose)
-			VERBOSE=1
-			;;
 		--ip1)
 			IP1=$2
 			shift
@@ -91,32 +68,13 @@ while [ $# -ne 0 ]; do
 		-n|--no-mad)
 			DO_MAD=0
 			;;
-		--in-vm)
-			IN_VM=1
-			;;
-		--help|-h)
-			usage $0
-			exit 1
-			;;
-		[0-9]*.[0-9]*.[0-9]*.[0-9]*)
-			if [ "$HOST1" == "" ]; then
-				HOST1=$1
-			elif [ "$HOST2" == "" ]; then
-				HOST2=$1
-			else
-				fatal_error "Too many host ip provided '$2'"
-			fi
-			;;
 		*)
 			fatal_error "Unknow argument $1"
 			;;
 	esac
 	shift
 done
-if [ "$HOST1" == "" -o "$HOST2" == "" ]; then
-	usage $0
-	fatal_error "Missing host names"
-fi
+common_check
 
 juLogSetProperty host1.name $HOST1
 juLogSetProperty host2.name $HOST2
@@ -327,35 +285,8 @@ run_phase 7 phase_7 "RDMA/Verbs"
 #
 #########################
 phase_8(){
-	case $(get_suse_version $HOST1) in
-		15|15.1)
-			juLog -name=mpitests_skipping_openmpi 'echo "WARNING: Disabling OpenMPI[134] for SLE15.[01]"'
-			MPI_FLAVOURS=$(echo $MPI_FLAVOURS | sed -e 's/openmpi,//g' -e 's/openmpi$//g' |
-							   sed -e 's/openmpi3,//g' -e 's/openmpi3$//g' |
-							   sed -e 's/openmpi4,//g' -e 's/openmpi4$//g')
-			;;
-		15.2|15.3)
-			juLog -name=mpitests_skipping_openmpi 'echo "WARNING: Disabling OpenMPI[14] for SLE15.[23]"'
-			MPI_FLAVOURS=$(echo $MPI_FLAVOURS | sed -e 's/openmpi,//g' -e 's/openmpi$//g' |
-							   sed -e 's/openmpi4,//g' -e 's/openmpi4$//g')
-			;;
-		15.4)
-			juLog -name=mpitests_skipping_openmpi 'echo "WARNING: Disabling OpenMPI for SLE15.4"'
-			MPI_FLAVOURS=$(echo $MPI_FLAVOURS | sed -e 's/openmpi,//g' -e 's/openmpi$//g')
-			;;
-		12.3|12.4|12.5)
-			juLog -name=mpitests_skipping_openmpi 'echo "WARNING: Disabling OpenMPI[234] and mpich for SLE12SP[34]"'
-			MPI_FLAVOURS=$(echo $MPI_FLAVOURS | sed -e 's/openmpi2,//g' -e 's/openmpi2$//g' |
-							   sed -e 's/openmpi3,//g' -e 's/openmpi3$//g' |
-							   sed -e 's/openmpi4,//g' -e 's/openmpi4$//g' |
-							   sed -e 's/mpich,//g' -e 's/mpich$//g')
-			;;
-		*)
-			# N/A
-			true
-			;;
-	esac
-	for flavour in $(echo $MPI_FLAVOURS | sed -e 's/,/ /g'); do
+	FLAVOURS=$(mpi_get_flavors $HOST1 $MPI_FLAVOURS)
+	for flavour in $(echo $FLAVOURS | sed -e 's/,/ /g'); do
 
 		juLog -name=mpitests_${flavour} test_mpi ${flavour} $HOST1 $IP1 $IP2
 	done

@@ -14,6 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+DEFAULT_MPI_FLAVOURS="mvapich2,mpich,openmpi,openmpi2,openmpi3,openmpi4"
+export MPI_FLAVOURS=${MPI_FLAVOURS:-$DEFAULT_MPI_FLAVOURS}
+
 test_mpi()
 {
 	local flavor=$1
@@ -38,4 +41,40 @@ test_mpi()
 		ENV_ARGS="MV2_ENABLE_AFFINITY=0 "
 	fi
 	tp $host "$ENV_ARGS VERBOSE=1 RUN_ARGS='$RUN_ARGS' SHORT=1 /usr/lib64/mpi/gcc/$flavor/tests/runtests.sh"
+}
+
+mpi_filter_flavour(){
+	local flavours=$1
+	shift
+
+	while [ $# -ne 0 ]; do
+		local filter=$1
+		flavours=$(echo $flavours | sed -e 's/'$filter',//g' -e 's/'$filter'$//g')
+		shift
+	done
+	echo $flavours
+}
+mpi_get_flavors()
+{
+	local host=$1
+	local flavours=$2
+	case $(get_suse_version $host) in
+		15|15.1)
+			flavours=$(mpi_filter_flavour $flavours openmpi openmpi3 openmpi4)
+			;;
+		15.2|15.3)
+			flavours=$(mpi_filter_flavour $flavours openmpi openmpi4)
+			;;
+		15.4)
+			flavours=$(mpi_filter_flavour $flavours openmpi)
+			;;
+		12.3|12.4|12.5)
+			flavours=$(mpi_filter_flavour $flavours openmpi2 openmpi3 openmpi4 mpich)
+			;;
+		*)
+			# N/A
+			true
+			;;
+	esac
+	echo $flavours
 }
