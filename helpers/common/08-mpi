@@ -43,28 +43,33 @@ test_mpi()
 	tp $host "$ENV_ARGS VERBOSE=1 RUN_ARGS='$RUN_ARGS' SHORT=1 /usr/lib64/mpi/gcc/$flavor/tests/runtests.sh"
 }
 
+mpi_filter_flavour(){
+	local flavours=$1
+	shift
+
+	while [ $# -ne 0 ]; do
+		local filter=$1
+		flavours=$(echo $flavours | sed -e 's/'$filter',//g' -e 's/'$filter'$//g')
+		shift
+	done
+	echo $flavours
+}
 mpi_get_flavors()
 {
 	local host=$1
 	local flavours=$2
 	case $(get_suse_version $host) in
 		15|15.1)
-			flavours=$(echo $flavours | sed -e 's/openmpi,//g' -e 's/openmpi$//g' |
-						   sed -e 's/openmpi3,//g' -e 's/openmpi3$//g' |
-						   sed -e 's/openmpi4,//g' -e 's/openmpi4$//g')
+			flavours=$(mpi_filter_flavour $flavours openmpi openmpi3 openmpi4)
 			;;
 		15.2|15.3)
-			flavours=$(echo $flavours | sed -e 's/openmpi,//g' -e 's/openmpi$//g' |
-						   sed -e 's/openmpi4,//g' -e 's/openmpi4$//g')
+			flavours=$(mpi_filter_flavour $flavours openmpi openmpi4)
 			;;
 		15.4)
-			flavours=$(echo $flavours | sed -e 's/openmpi,//g' -e 's/openmpi$//g')
+			flavours=$(mpi_filter_flavour $flavours openmpi)
 			;;
 		12.3|12.4|12.5)
-			flavours=$(echo $flavours | sed -e 's/openmpi2,//g' -e 's/openmpi2$//g' |
-						   sed -e 's/openmpi3,//g' -e 's/openmpi3$//g' |
-						   sed -e 's/openmpi4,//g' -e 's/openmpi4$//g' |
-						   sed -e 's/mpich,//g' -e 's/mpich$//g')
+			flavours=$(mpi_filter_flavour $flavours openmpi2 openmpi3 openmpi4 mpich)
 			;;
 		*)
 			# N/A
