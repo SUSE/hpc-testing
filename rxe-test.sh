@@ -92,6 +92,9 @@ phase_0(){
 	juLog_fatal -name=h1_setup_requirements "setup_requirements $HOST1"
 	juLog_fatal -name=h2_setup_requirements "setup_requirements $HOST2"
 
+	juLog_fatal -name=h1_existing_rdma "check_existing_rdma_if $HOST1"
+	juLog_fatal -name=h2_existing_rdma "check_existing_rdma_if $HOST2"
+
 	juLog -name=h1_firewall_down "firewall_down $HOST1"
 	juLog -name=h2_firewall_down "firewall_down $HOST2"
 
