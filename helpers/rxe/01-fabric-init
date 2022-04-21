@@ -20,21 +20,24 @@ get_port()
 	local host_id=$2
 	local eth=$(eval echo \$IPPORT$host_id)
 
-	tp $host "rxe_cfg remove $eth"
-	tp $host "rxe_cfg add $eth"
-	tp $host "rxe_cfg start"
+	tp $host "rdma link del rxe0 || true"
+	tp $host "rdma link add rxe0 type rxe netdev $eth"
 
-	res=$(tpq $host rxe_cfg | grep $eth)
+	res=$(tpq $host "rdma link show" | grep $eth)
 	if [ "$res" == "" ]; then
 		fatal_error "Failed to find an active port on $host"
 	fi
 
 	ip=$(echo $res | awk '{ print $5}')
-	rxe=$(echo $res | awk '{ print $6}')
+	rxe=$(echo $res | awk '{ print $2}' | sed -e 's/\/.*//')
+	port=$(echo $res | awk '{ print $2}' | sed -e 's/.*\///')
 
-	eval export IP$host_id=$ip
 	eval export HCA$host_id=$rxe
-	eval export IBPORT$host_id=1
+	eval export IBPORT$host_id=$port
+
+	ip=$(tpq $host "ip addr show $eth" | grep inet | grep -v inet6 | \
+			 awk '{print $2}' | sed -e 's/\/.*//')
+	eval export IP$host_id=$ip
 
 	juLogSetProperty $host.ip_if $ip
 	juLogSetProperty $host.port $rxe
