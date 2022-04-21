@@ -109,6 +109,8 @@ juLog() {
   end=`date +%s.%N`
   echo "+++ exit code: $evErr"    | tee -a $outf
   [ $evErr != 0 ] && err=1 || err=0
+  out=`cat $outf`
+  rm -f $outf
 
   # calculate vars
   asserts=`expr $asserts + 1`
