@@ -19,12 +19,10 @@ DEFAULT_START_PHASE=0
 DEFAULT_END_PHASE=999
 DEFAULT_IP1=192.168.0.1
 DEFAULT_IP2=192.168.0.2
-DEFAULT_MPI_FLAVOURS="mvapich2,mpich,openmpi,openmpi2,openmpi3,openmpi4"
 DEFAULT_IPOIB_MODES="connected,datagram"
 
 export START_PHASE=${START_PHASE:-$DEFAULT_START_PHASE}
 export END_PHASE=${END_PHASE:-$DEFAULT_END_PHASE}
-export MPI_FLAVOURS=${MPI_FLAVOURS:-$DEFAULT_MPI_FLAVOURS}
 export IPOIB_MODES=${IPOIB_MODES:-$DEFAULT_IPOIB_MODES}
 export IP1=${IP1:-$DEFAULT_IP1}
 export IP2=${IP2:-$DEFAULT_IP2}
@@ -327,34 +325,7 @@ run_phase 7 phase_7 "RDMA/Verbs"
 #
 #########################
 phase_8(){
-	case $(get_suse_version $HOST1) in
-		15|15.1)
-			juLog -name=mpitests_skipping_openmpi 'echo "WARNING: Disabling OpenMPI[134] for SLE15.[01]"'
-			MPI_FLAVOURS=$(echo $MPI_FLAVOURS | sed -e 's/openmpi,//g' -e 's/openmpi$//g' |
-							   sed -e 's/openmpi3,//g' -e 's/openmpi3$//g' |
-							   sed -e 's/openmpi4,//g' -e 's/openmpi4$//g')
-			;;
-		15.2|15.3)
-			juLog -name=mpitests_skipping_openmpi 'echo "WARNING: Disabling OpenMPI[14] for SLE15.[23]"'
-			MPI_FLAVOURS=$(echo $MPI_FLAVOURS | sed -e 's/openmpi,//g' -e 's/openmpi$//g' |
-							   sed -e 's/openmpi4,//g' -e 's/openmpi4$//g')
-			;;
-		15.4)
-			juLog -name=mpitests_skipping_openmpi 'echo "WARNING: Disabling OpenMPI for SLE15.4"'
-			MPI_FLAVOURS=$(echo $MPI_FLAVOURS | sed -e 's/openmpi,//g' -e 's/openmpi$//g')
-			;;
-		12.3|12.4|12.5)
-			juLog -name=mpitests_skipping_openmpi 'echo "WARNING: Disabling OpenMPI[234] and mpich for SLE12SP[34]"'
-			MPI_FLAVOURS=$(echo $MPI_FLAVOURS | sed -e 's/openmpi2,//g' -e 's/openmpi2$//g' |
-							   sed -e 's/openmpi3,//g' -e 's/openmpi3$//g' |
-							   sed -e 's/openmpi4,//g' -e 's/openmpi4$//g' |
-							   sed -e 's/mpich,//g' -e 's/mpich$//g')
-			;;
-		*)
-			# N/A
-			true
-			;;
-	esac
+	FLAVOURS=$(mpi_get_flavors $HOST1 $MPI_FLAVOURS)
 	for flavour in $(echo $MPI_FLAVOURS | sed -e 's/,/ /g'); do
 
 		juLog -name=mpitests_${flavour} test_mpi ${flavour} $HOST1 $IP1 $IP2
