@@ -18,8 +18,8 @@
 DEFAULT_IPPORT1=eth0
 DEFAULT_IPPORT2=eth0
 
-export IPPORT1=${IPPORT1:-$DEFAULT_IPPORT1}
-export IPPORT2=${IPPORT2:-$DEFAULT_IPPORT2}
+export IPPORT1=""
+export IPPORT2=""
 export DO_MAD=0
 
 source $(dirname $0)/helpers/common.sh
@@ -63,6 +63,20 @@ while [ $# -ne 0 ]; do
 	shift
 done
 common_check
+
+if [ "$IPPORT1" == "" ]; then
+	export IPPORT1=$(tpq $HOST1 "ip addr" | ip_addr_show_to_dev $HOST1)
+fi
+if [ "$IPPORT1" == "" ]; then
+	fatal_error "No ethernet device specified or found for $HOST1"
+fi
+
+if [ "$IPPORT2" == "" ]; then
+	export IPPORT2=$(tpq $HOST2 "ip addr" | ip_addr_show_to_dev $HOST2)
+fi
+if [ "$IPPORT2" == "" ]; then
+	fatal_error "No ethernet device specified or found for $HOST2"
+fi
 
 juLogSetProperty host1.name $HOST1
 juLogSetProperty host2.name $HOST2
@@ -113,12 +127,10 @@ run_phase 1 phase_1 "Fabric init"
 
 #########################
 #
-# Phase 2: Not Applicable
-#
-#########################
-#########################
-#
-# Phase 3: Not Applicable
+# Skipping these not applicable phases
+# Phase 2: IPoIB
+# Phase 3: SM Failover
+# Phase 4: SRP
 #
 #########################
 #########################
@@ -127,21 +139,16 @@ run_phase 1 phase_1 "Fabric init"
 #
 #########################
 phase_5(){
-	true
-	#juLog -name=nfs_over_rdma test_nfs $HOST1 $IP1 $HOST2
+	juLog -name=nfs_over_rdma test_nfs $HOST1 $IP1 $HOST2
 }
 run_phase 5 phase_5 "NFSoRDMA"
 
 #########################
 #
+# Not applicable
 # Phase 6: DAPL
 #
 #########################
-phase_6(){
-	true
-	#juLog -name=dapl -error='DAT_' test_dapl $HOST1 $IPPORT1 $HOST2 $IPPORT2 $IP2
-}
-run_phase 6 phase_6 "DAPL"
 
 #########################
 #
@@ -152,7 +159,7 @@ phase_7(){
 	for mode in rc uc ud srq; do
 		export IBV_EXTRA_OPTS=""
 		if [ "$mode" == "ud" ]; then
-			IBV_EXTRA_OPTS="-s 1450"
+			IBV_EXTRA_OPTS="-s 1024"
 		fi
 		juLog -name=${mode}_pingpong "(
 	  	  test_ibv_pingpong ibv_${mode}_pingpong $HOST1 $HCA1 $IBPORT1 $HOST2 $HCA2 $IBPORT2 &&
@@ -169,8 +176,81 @@ run_phase 7 phase_7 "RDMA/Verbs"
 #########################
 phase_8(){
 	FLAVOURS=$(mpi_get_flavors $HOST1 $MPI_FLAVOURS)
+	# Right now, it seems only OpenMPI2 works fine with RXE
+	FLAVOURS=$(mpi_filter_flavour $FLAVOURS mpich mvapich2 openmpi3 openmpi4 openmpi)
 	for flavour in $(echo $FLAVOURS | sed -e 's/,/ /g'); do
 		juLog -name=mpitests_${flavour} test_mpi ${flavour} $HOST1 $IP1 $IP2
 	done
 }
 run_phase 8 phase_8 "MPI"
+
+#########################
+#
+# Too much unsupported tests
+# Phase 9: libfabric
+#
+#########################
+
+
+#########################
+#
+# Phase 10: NVMEoF
+#
+#########################
+
+test_nvme(){
+	local server=$1
+	local server_ip=$2
+	local client=$3
+
+
+	# Cleanup old stuff just in case
+	tp $client "mount | grep /dev/nvme | awk '{ print \$1}' | xargs -I - umount - 2>/dev/null || true;
+	   		    nvme disconnect -n testnq || true"
+
+	cat helpers/ib/nvmet.json | tpq $server 'cat > hpc-nvmet.json'
+
+	tp $server 'umount /tmp/hpc-test.mount 2>/dev/null || true;
+	   		    rm -Rf /tmp/hpc-test.mount /tmp/hpc-test.io 2>/dev/null || true;
+	   		   	losetup -a | grep hpc-test.io | sed -e s/:.*// | xargs losetup -d || true;
+				modprobe nvmet;
+				nvmetcli clear || true;
+				modprobe nvmet_rdma &&
+				LOOPD=$(losetup -f) &&
+				dd if=/dev/zero of=/tmp/hpc-test.io bs=1M count=256 &&
+				losetup ${LOOPD} /tmp/hpc-test.io &&
+				mkfs.ext3 ${LOOPD} &&
+				mkdir /tmp/hpc-test.mount/ &&
+				mount ${LOOPD} /tmp/hpc-test.mount/ &&
+				dd if=/dev/urandom bs=1M count=64 of=/tmp/hpc-test.mount/input &&
+				umount  /tmp/hpc-test.mount &&
+				sed -i -e s/@MYIP@/'$server_ip'/ -e s%@BLK@%${LOOPD}% hpc-nvmet.json &&
+				nvmetcli restore hpc-nvmet.json'
+
+	tp $client 'umount /tmp/srp-hpc-test 2>/dev/null || true;
+	   		    rm -Rf /tmp/srp-hpc-test 2>/dev/null || true;
+				modprobe nvme_rdma &&
+				mkdir /tmp/srp-hpc-test &&
+				rm -f /etc/nvme/hostid &&
+				nvme discover -t rdma -a '$server_ip' -s 4420 &&
+				nvme connect -t rdma -n testnqn -a '$server_ip' -s 4420 &&
+				block_device=$(lsblk | grep nvme | awk "{ print \$1}") &&
+				echo $block_device &&
+				mount /dev/$block_device /tmp/srp-hpc-test &&
+				cp -R /tmp/srp-hpc-test/input /tmp/srp-hpc-test/output &&
+				diff -q /tmp/srp-hpc-test/input /tmp/srp-hpc-test/output&&
+				umount /tmp/srp-hpc-test &&
+				nvme disconnect -n testnqn &&
+				! (lsblk | grep nvme)'
+
+	tp $server 'nvmetcli clear &&
+	   		    mount -o loop /tmp/hpc-test.io /tmp/hpc-test.mount &&
+			   	diff -q /tmp/hpc-test.mount/input /tmp/hpc-test.mount/output &&
+				umount /tmp/hpc-test.mount &&
+				losetup -a | grep hpc-test.io | sed -e s/:.*// | xargs losetup -d'
+}
+
+phase_10(){
+	juLog -name=nvme test_nvme $HOST2 $IP2 $HOST1
+}
+run_phase 10 phase_10 "nvme"

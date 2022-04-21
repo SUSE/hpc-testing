@@ -20,8 +20,8 @@ get_port()
 	local host_id=$2
 	local eth=$(eval echo \$IPPORT$host_id)
 
-	tp $host "rdma link del rxe0 || true"
-	tp $host "rdma link add rxe0 type rxe netdev $eth"
+	tpq $host "rdma link del rxe0 || true"
+	tpq $host "rdma link add rxe0 type rxe netdev $eth"
 
 	res=$(tpq $host "rdma link show" | grep $eth)
 	if [ "$res" == "" ]; then
