@@ -47,10 +47,13 @@ test_ib()
 	# Wait for IP if to get up
 	sleep 3
 
-	IB_IP1=$(tpq $HOST1 "ip addr show ib0" | ip_addr_show_to_ip)
-	IB_IP2=$(tpq $HOST2 "ip addr show ib0" | ip_addr_show_to_ip)
+	IB_IF1=$(tpq $HOST1 "ip -br link show type ipoib" | head -n 1 | awk '{print $1}')
+	IB_IP1=$(tpq $HOST1 "ip addr show $IB_IF1" | ip_addr_show_to_ip)
 
-	tp $HOST1 "cd $TESTDIR; ./ib-test.sh --no-mad --in-vm --ip1 $IB_IP1 --ip2 $IB_IP2 $HOST1 $HOST2\
+	IB_IF2=$(tpq $HOST2 "ip -br link show type ipoib" | head -n 1 | awk '{print $1}')
+	IB_IP2=$(tpq $HOST2 "ip addr show $IB_IF2" | ip_addr_show_to_ip)
+
+	tp $HOST1 "cd $TESTDIR; ./ib-test.sh --no-mad --in-vm --ip1 $IB_IP1 --ip2 $IB_IP2 $HOST1 $HOST2 \
    -s $START_PHASE -e $END_PHASE -M $MPI_FLAVOURS"
 }
 
