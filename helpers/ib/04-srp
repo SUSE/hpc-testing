@@ -30,6 +30,11 @@ test_srp()
 	local client_board=$8
 	local client_port=$9
 
+   if [ "$IN_VM" == "1" ]; then
+	   juLog -name=srp_skipping 'echo "Skipping SRP test as it does not work with SRIOV"'
+	   return 0
+   fi
+
 	# Make sure srp_daemon works (bsc#1195874)
 	tp $client "systemctl stop srp_daemon_port@${client_board}:${client_port} || true"
 	tp $client 'systemctl restart srp_daemon; sleep 2'
