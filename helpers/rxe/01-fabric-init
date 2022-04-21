@@ -35,8 +35,7 @@ get_port()
 	eval export HCA$host_id=$rxe
 	eval export IBPORT$host_id=$port
 
-	ip=$(tpq $host "ip addr show $eth" | grep inet | grep -v inet6 | \
-			 awk '{print $2}' | sed -e 's/\/.*//')
+	ip=$(tpq $host "ip addr show $eth" | ip_addr_show_to_ip)
 	eval export IP$host_id=$ip
 
 	juLogSetProperty $host.ip_if $ip

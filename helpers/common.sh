@@ -25,6 +25,16 @@ fatal_error()
 	exit 1
 }
 
+ip_addr_show_to_ip()
+{
+	 grep inet /dev/stdin  | grep -v inet6 | sed -e 's/.*inet \([0-9.]*\)\/\?.*$/\1/'
+}
+ip_addr_show_to_dev()
+{
+	local ip=$1
+	grep inet /dev/stdin  | grep -v inet6 | grep $ip | awk '{ print $NF}'
+}
+
 tp_check_local()
 {
 	local host=$1
