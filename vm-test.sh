@@ -1,4 +1,19 @@
 #!/bin/bash
+# hpc-testing
+# Copyright (C) 2022 SUSE LLC
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Small wrapper script use to launch the test suite on internal VM setup
 export TESTDIR=$(readlink -f $(dirname $0))
@@ -39,8 +54,22 @@ common_check
 set_properties $HOST1
 set_properties $HOST2
 
+remove_all_mods_host()
+{
+	local host=$1
+	tpq $host "rmmod rdma_rxe mlx5_ib mlx5_core 2>/dev/null || true"
+	check_existing_hw_rdma_if $host
+	check_existing_sw_rdma_if $host randomnamethatcannotbeardmainterfacetype
+}
+
+remove_all_mods()
+{
+	remove_all_mods_host $HOST1
+	remove_all_mods_host $HOST2
+}
 test_ib()
 {
+	remove_all_mods
 	tpq $HOST1 "modprobe mlx5_ib"
 	tpq $HOST2 "modprobe mlx5_ib"
 
@@ -59,8 +88,9 @@ test_ib()
 
 test_rxe()
 {
-	tpq $HOST1 "rmmod mlx5_ib mlx5_core; true"
-	tpq $HOST2 "rmmod mlx5_ib mlx5_core; true"
+	remove_all_mods
+	tpq $HOST1 "modprobe rdma_rxe"
+	tpq $HOST2 "modprobe rdma_rxe"
 	tp $HOST1 "cd $TESTDIR; ./rxe-test.sh  --in-vm $HOST1 $HOST2"
 }
 
