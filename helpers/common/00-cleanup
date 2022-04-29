@@ -86,3 +86,31 @@ get_common_package_list()
 	esac
 	echo $PACKAGE_LIST " "
 }
+
+check_existing_hw_rdma_if()
+{
+	local host=$1
+	echo "Checking for existing IPoIB interface (meaning HW RDMA)"
+	n_rdma=$(tpq $host 'ip -br link show type ipoib' | wc -l)
+	if [ "$n_rdma" != "0" ]; then
+		fatal_error "Found $n_rdma HW RDMA interfaces"
+	else
+		echo "No HW RDMA found as expected"
+	fi
+	return $n_rdma
+}
+
+check_existing_sw_rdma_if()
+{
+	local host=$1
+	local if_type=$2
+
+	echo "Checking for existing software RDMA interface (${if_type} excluded)"
+	n_rdma=$(tpq $host 'rdma link' | grep -v ${if_type}0 | wc -l)
+	if [ "$n_rdma" != "0" ]; then
+		fatal_error "Found $n_rdma SW RDMA interfaces"
+	else
+		echo "No SW RDMA found as expected"
+	fi
+	return $n_rdma
+}

@@ -25,15 +25,4 @@ get_package_list()
 	get_common_package_list $1
 }
 
-check_existing_rdma_if()
-{
-	local host=$1
-	echo "Checking for existing IPoIB interface (meaning HW RDMA)"
-	n_rdma=$(tpq $host 'ip -br link show type ipoib' | wc -l)
-	if [ "$n_rdma" != "0" ]; then
-		fatal_error "Found $n_rdma HW RDMA interfaces"
-	else
-		echo "No HW RDMA found as expected"
-	fi
-	return $n_rdma
-}
+
