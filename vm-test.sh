@@ -57,7 +57,7 @@ set_properties $HOST2
 remove_all_mods_host()
 {
 	local host=$1
-	tpq $host "rmmod rdma_rxe mlx5_ib mlx5_core 2>/dev/null || true"
+	tpq $host "rmmod rdma_rxe siw mlx5_ib mlx5_core 2>/dev/null || true"
 	check_existing_hw_rdma_if $host
 	check_existing_sw_rdma_if $host randomnamethatcannotbeardmainterfacetype
 }
@@ -94,6 +94,15 @@ test_rxe()
 	tp $HOST1 "cd $TESTDIR; ./rxe-test.sh  --in-vm $HOST1 $HOST2"
 }
 
+test_siw()
+{
+	remove_all_mods
+	tpq $HOST1 "modprobe siw"
+	tpq $HOST2 "modprobe siw"
+	tp $HOST1 "cd $TESTDIR; ./siw-test.sh  --in-vm $HOST1 $HOST2"
+}
+
 VERBOSE=1
 juLog -name=test_ib test_ib
 juLog -name=test_rxe test_rxe
+juLog -name=test_siw test_siw
