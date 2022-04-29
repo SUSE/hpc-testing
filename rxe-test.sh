@@ -115,8 +115,8 @@ juLogSetProperty $HOST2.rxe_eth $IPPORT2
 #
 #########################
 # Do not wrap these as they export needed variables
-get_port $HOST1 1
-get_port $HOST2 2
+get_srdma_port $HOST1 1 rxe
+get_srdma_port $HOST2 2 rxe
 
 phase_1(){
 	juLog_fatal -name=h1_setup_ssh_keys "setup_ssh $HOST1 $IP2"

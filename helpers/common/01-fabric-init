@@ -24,3 +24,34 @@ setup_ssh()
 	   		  sed -i '/^$remote_ip /d' .ssh/known_hosts &&
 			  ssh-keyscan $remote_ip >> .ssh/known_hosts"
 }
+
+get_srdma_port()
+{
+	local host=$1
+	local host_id=$2
+	local port_type=$3
+	local eth=$(eval echo \$IPPORT$host_id)
+
+	tpq $host "rdma link del ${port_type}0 2>/dev/null || true"
+	tpq $host "rdma link add ${port_type}0 type ${port_type} netdev $eth"
+
+	res=$(tpq $host "rdma link show" | grep $eth)
+	if [ "$res" == "" ]; then
+		fatal_error "Failed to find an active port on $host"
+	fi
+
+	ip=$(echo $res | awk '{ print $5}')
+	rdma_if=$(echo $res | awk '{ print $2}' | sed -e 's/\/.*//')
+	port=$(echo $res | awk '{ print $2}' | sed -e 's/.*\///')
+
+	eval export HCA$host_id=$rdma_if
+	eval export IBPORT$host_id=$port
+
+	ip=$(tpq $host "ip addr show $eth" | ip_addr_show_to_ip)
+	eval export IP$host_id=$ip
+
+	juLogSetProperty $host.ip_if $ip
+	juLogSetProperty $host.port $rdma_if
+
+	echo "[SUCCESS] Host $host uses interface $rdma_if."
+}
