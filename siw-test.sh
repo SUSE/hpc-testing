@@ -1,6 +1,6 @@
 #!/bin/bash
 # hpc-testing
-# Copyright (C) 2018 SUSE LLC
+# Copyright (C) 2022 SUSE LLC
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ export DO_MAD=0
 
 source $(dirname $0)/helpers/common.sh
 load_helpers $(dirname $0) "common"
-load_helpers $(dirname $0) "rxe"
+load_helpers $(dirname $0) "siw"
 
 usage(){
 	echo "Usage: ${0} [options] <host1> <host2>"
@@ -95,8 +95,8 @@ phase_0(){
 	juLog_fatal -name=h1_existing_hw_rdma "check_existing_hw_rdma_if $HOST1"
 	juLog_fatal -name=h2_existing__hwrdma "check_existing_hw_rdma_if $HOST2"
 
-	juLog_fatal -name=h1_existing_hw_rdma "check_existing_sw_rdma_if $HOST1 rxe"
-	juLog_fatal -name=h2_existing__hwrdma "check_existing_sw_rdma_if $HOST2 rxe"
+	juLog_fatal -name=h1_existing_hw_rdma "check_existing_sw_rdma_if $HOST1 iwarp"
+	juLog_fatal -name=h2_existing__hwrdma "check_existing_sw_rdma_if $HOST2 iwarp"
 
 	juLog -name=h1_firewall_down "firewall_down $HOST1"
 	juLog -name=h2_firewall_down "firewall_down $HOST2"
@@ -106,8 +106,8 @@ run_phase 0 phase_0 "State Cleanup"
 
 set_properties $HOST1
 set_properties $HOST2
-juLogSetProperty $HOST1.rxe_eth $IPPORT1
-juLogSetProperty $HOST2.rxe_eth $IPPORT2
+juLogSetProperty $HOST1.siw_eth $IPPORT1
+juLogSetProperty $HOST2.siw_eth $IPPORT2
 
 #########################
 #
@@ -118,8 +118,8 @@ juLogSetProperty $HOST2.rxe_eth $IPPORT2
 #
 #########################
 # Do not wrap these as they export needed variables
-get_srdma_port $HOST1 1 rxe
-get_srdma_port $HOST2 2 rxe
+get_srdma_port $HOST1 1 siw
+get_srdma_port $HOST2 2 siw
 
 phase_1(){
 	juLog_fatal -name=h1_setup_ssh_keys "setup_ssh $HOST1 $IP2"
@@ -159,21 +159,9 @@ run_phase 5 phase_5 "NFSoRDMA"
 #########################
 #
 # Phase 7: RDMA/Verbs
+# Seems broken (or unimplemented)
 #
 #########################
-phase_7(){
-	for mode in rc uc ud srq; do
-		export IBV_EXTRA_OPTS=""
-		if [ "$mode" == "ud" ]; then
-			IBV_EXTRA_OPTS="-s 1024"
-		fi
-		juLog -name=${mode}_pingpong "(
-	  	  test_ibv_pingpong ibv_${mode}_pingpong $HOST1 $HCA1 $IBPORT1 $HOST2 $HCA2 $IBPORT2 &&
-	  	  test_ibv_pingpong ibv_${mode}_pingpong $HOST2 $HCA2 $IBPORT2 $HOST1 $HCA1 $IBPORT1
-        )"
-	done
-}
-run_phase 7 phase_7 "RDMA/Verbs"
 
 #########################
 #
@@ -182,7 +170,7 @@ run_phase 7 phase_7 "RDMA/Verbs"
 #########################
 phase_8(){
 	FLAVOURS=$(mpi_get_flavors $HOST1 $MPI_FLAVOURS)
-	# Right now, it seems only OpenMPI2 works fine with RXE
+	# Right now, it seems only OpenMPI2 works fine with SIW
 	FLAVOURS=$(mpi_filter_flavour $FLAVOURS mpich mvapich2 openmpi3 openmpi4 openmpi)
 	for flavour in $(echo $FLAVOURS | sed -e 's/,/ /g'); do
 		juLog -name=mpitests_${flavour} test_mpi ${flavour} $HOST1 $IP1 $IP2
