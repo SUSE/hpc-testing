@@ -118,6 +118,8 @@ test_nodedesc()
 					sed -e 's/^Node Description:\.*//' | awk '{ print $1}')
 	rhostname=$(tpq $host "hostname -s")
 	if [ "$node_desc" != "$rhostname" ]; then
-		fatal_error "Missing or bad hostname in node description. Expected '$rhostname' found '$node_desc'" >&2
+		status=$(tpq $host systemctl status rdma-ndd)
+		fatal_error "Missing or bad hostname in node description. Expected '$rhostname' found '$node_desc'. $status" >&2
+
 	fi
 }
