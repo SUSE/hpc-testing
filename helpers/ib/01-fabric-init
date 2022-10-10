@@ -113,13 +113,15 @@ test_nodedesc()
 {
 	local host=$1
 	local guid=$2
+	local hca=$3
 
 	node_desc=$(tpq $host "smpquery -G NodeDesc $guid" | \
 					sed -e 's/^Node Description:\.*//' | awk '{ print $1}')
 	rhostname=$(tpq $host "hostname -s")
 	if [ "$node_desc" != "$rhostname" ]; then
-		status=$(tpq $host systemctl status rdma-ndd)
-		fatal_error "Missing or bad hostname in node description. Expected '$rhostname' found '$node_desc'. $status" >&2
+		status=$(tpq $host "systemctl status rdma-ndd")
+		sys_val=$(tpq $host "cat /sys/class/infinband/${hca}/node_desc")
+		fatal_error "Missing or bad hostname in node description. Expected '$rhostname' found '$node_desc'.\nsysvalue=${sys_val}\n${status}" >&2
 
 	fi
 }

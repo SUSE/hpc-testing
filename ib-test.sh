@@ -153,8 +153,8 @@ phase_1_2(){
 		juLog_fatal -name=h1_ibdiagnet test_ibdiagnet $HOST1
 		juLog_fatal -name=h2_ibdiagnet test_ibdiagnet $HOST2
 
-		juLog -name=h1_test_nodedesc "test_nodedesc $HOST1 $GUID1"
-		juLog -name=h2_test_nodedesc "test_nodedesc $HOST2 $GUID2"
+		juLog -name=h1_test_nodedesc "test_nodedesc $HOST1 $GUID1 $HCA1"
+		juLog -name=h2_test_nodedesc "test_nodedesc $HOST2 $GUID2 $HCA2"
 	fi
 }
 run_phase 1 phase_1_2 "Fabric init (2/2)"
