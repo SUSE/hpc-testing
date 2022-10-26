@@ -33,7 +33,7 @@ set_ipoib_up()
 	local ipaddr=$3 #ip/netmask
 
 	tp $host "ip link set dev $port up &&
-			  ip addr flush $port &&
+			  ip -4 addr flush $port &&
 			  ip addr add $ipaddr dev $port"
 }
 set_ipoib_down()
@@ -42,7 +42,7 @@ set_ipoib_down()
 	local port=$2
 
 	tp $host "ip link set dev $port down &&
-	   		  ip addr flush $port"
+	   		  ip -4 addr flush $port"
 }
 disable_enhanced()
 {
@@ -97,6 +97,16 @@ test_ping()
 	local pkt_size=$3
 
 	tp $host "ip neigh flush $remote_addr && ping -fq -t 3 -c 10000 -w 10 -s $pkt_size $remote_addr"
+}
+
+test_ping6()
+{
+	local host=$1
+	local interface=$2
+	local remote_addr=$3
+	local pkt_size=$4
+
+	tp $host "ip neigh flush $remote_addr && ping6 -fq -t 3 -c 10000 -w 10 -I $interface -s $pkt_size $remote_addr"
 }
 
 test_sftp()
