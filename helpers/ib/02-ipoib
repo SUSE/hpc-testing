@@ -96,7 +96,7 @@ test_ping()
 	local remote_addr=$2
 	local pkt_size=$3
 
-	tp $host "ip neigh flush $remote_addr && ping -i 0.01 -t 3 -c 100 -s $pkt_size $remote_addr"
+	tp $host "ip neigh flush $remote_addr && ping -fq -t 3 -c 10000 -w 10 -s $pkt_size $remote_addr"
 }
 
 test_sftp()
