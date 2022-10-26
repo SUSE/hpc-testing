@@ -1,3 +1,13 @@
+- hpc-testing 0.6.0
+  * Add support for SLES15SP[45]
+  * Add support for Tumbleweed
+  * Update rxe tests to use ip command
+  * Code cleanup and refactoring
+  * Add siw testsuite
+  * Add vm-test to run ib, rxe and siw test on a "standard" dual VM setup
+  * Tune rdma-ndd test for more debugability
+  * Add ipv6 tests for IPoIB
+  * Add multiple tests of openmpi >= 3 with different settings
 - hpc-testing 0.5.0
   * Add -g 0 option to fix ibv tests on SRIOV
   * Replace iptable fiddling with SuSEfirewall2 stop

@@ -29,6 +29,10 @@ ip_addr_show_to_ip()
 {
 	 grep inet /dev/stdin  | grep -v inet6 | sed -e 's/.*inet \([0-9.]*\)\/\?.*$/\1/'
 }
+ip_addr_show_to_ipv6()
+{
+	 grep inet6 /dev/stdin  | sed -e 's/.*inet6 \([0-9a-f:]*\)\/\?.*$/\1/'
+}
 ip_addr_show_to_dev()
 {
 	local ip=$1

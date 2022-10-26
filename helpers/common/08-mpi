@@ -14,7 +14,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-DEFAULT_MPI_FLAVOURS="mvapich2,mpich,openmpi,openmpi2,openmpi3,openmpi4"
+DEFAULT_MPI_FLAVOURS="\
+mvapich2,mpich,openmpi,openmpi2,\
+openmpi3,\
+openmpi3--btl=openib--pml=^ucx,\
+openmpi3--btl=openib--pml=^ucx,\
+openmpi3--btl=self--pml=ucx,\
+openmpi4,\
+openmpi4--btl=openib--btl_openib_allow_ib=1--pml=^ucx,\
+openmpi4--btl=openib--pml=^ucx,\
+openmpi4--btl=self--pml=ucx"
+
 export MPI_FLAVOURS=${MPI_FLAVOURS:-$DEFAULT_MPI_FLAVOURS}
 
 test_mpi()
@@ -25,6 +35,13 @@ test_mpi()
 	local ip2=$4
 	export RUN_ARGS=""
 
+	case $flavor in
+	    openmpi*--*)
+		RUN_ARGS="${RUN_ARGS} $(echo $flavor | \
+		sed -e 's/^[^-]*--/--/' -e 's/--\([^=]\+\)=\([^,-]\+\)/--mca \1 \2 /g' -e 's/%/,/g')"
+		flavor=$(echo $flavor | sed -e 's/^\([^-]*\)--.*$/\1/')
+		;;
+	esac
 	case $flavor in
 		openmpi|openmpi2)
 			RUN_ARGS="${RUN_ARGS} --allow-run-as-root"
@@ -49,7 +66,7 @@ mpi_filter_flavour(){
 
 	while [ $# -ne 0 ]; do
 		local filter=$1
-		flavours=$(echo $flavours | sed -e 's/'$filter',//g' -e 's/'$filter'$//g')
+		flavours=$(echo $flavours | sed -e 's/'$filter'\(--[^,]\+\)\?,//g' -e 's/'$filter'\(--[^,]\+\)\?$//g')
 		shift
 	done
 	echo $flavours
@@ -65,7 +82,7 @@ mpi_get_flavors()
 		15.2|15.3)
 			flavours=$(mpi_filter_flavour $flavours openmpi openmpi4)
 			;;
-		15.4)
+		15.4|15.5)
 			flavours=$(mpi_filter_flavour $flavours openmpi)
 			;;
 		12.3|12.4|12.5)

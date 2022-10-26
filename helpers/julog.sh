@@ -22,6 +22,7 @@
 ###
 
 asserts=00; errors=0; total=0; content=""
+errored_tests=""
 properties=""
 classname="default"
 timestamp=$(date -u '+%Y-%m-%dT%H:%M:%S')
@@ -129,8 +130,12 @@ juLog() {
 
   # write the junit xml report
   ## failure tag
-  [ $err = 0 ] && failure="" ||
-		  failure="<failure type=\"ScriptError\" message=\"$name failed: $cmd\"></failure>"
+  if [ $err = 0 ]; then
+      failure=""
+  else
+      failure="<failure type=\"ScriptError\" message=\"$name failed: $cmd\"></failure>"
+      errored_tests="${errored_tests} - $name\n"
+  fi
   tcerr=""
   if [ -n "$failure" ]; then
   	tcerr="errors=\"1\""
@@ -158,6 +163,8 @@ juLog_summary()
 		exit 0
 	else
 		echo "[FAILURE][$suite] Testsuite summary: tests=$asserts errors=$errors time=$total"
+		echo "List of failed tests:"
+		echo -en $errored_tests
 		exit 1
 	fi
 }
