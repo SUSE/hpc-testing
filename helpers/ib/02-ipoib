@@ -54,6 +54,42 @@ enable_enhanced()
 	local host=$1
 	tp $host "rmmod mlx5_ib && modprobe mlx5_ib ipoib_enhanced=1"
 }
+reload_mlx5_ib()
+{
+	local host=$1
+	tp $host "rmmod mlx5_ib && modprobe mlx5_ib"
+}
+driver_resetup()
+{
+    local testname=$1
+    local driver_func=$2
+
+    local host1=$3
+    local ipport1=$4
+    local ip1=$5
+
+    local host2=$6
+    local ipport2=$7
+    local ip2=$8
+
+    ip1_setup=""
+    if [ "$ip1" != "" ]; then
+	ip1_setup="&& set_ipoib_up $host1 $ipport1 $ip1/24"
+    fi
+    ip2_setup=""
+    if [ "$ip2" != "" ]; then
+	ip2_setup="&& set_ipoib_up $host2 $ipport2 $ip2/24"
+    fi
+
+    if [ $DO_MAD -eq 1 ]; then
+	juLog -name=h1_${testname}_opensm "kill_opensm $host1"
+    fi
+    juLog -name=h1_${testname} "${driver_func} $host1 ${ip1_setup}"
+    juLog -name=h2_${testname} "${driver_func} $host2 ${ip2_setup}"
+    if [ $DO_MAD -eq 1 ]; then
+	juLog -name=h1_${testname}_start_opensm "start_opensm $host1 -p 10"
+    fi
+}
 test_ping()
 {
 	local host=$1
