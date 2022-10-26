@@ -18,11 +18,10 @@ DEFAULT_MPI_FLAVOURS="\
 mvapich2,mpich,openmpi,openmpi2,\
 openmpi3,\
 openmpi3--btl=openib--pml=^ucx,\
-openmpi3--btl=openib--pml=^ucx,\
+openmpi3--btl=ofi--pml=^ucx,\
 openmpi3--btl=self--pml=ucx,\
 openmpi4,\
-openmpi4--btl=openib--btl_openib_allow_ib=1--pml=^ucx,\
-openmpi4--btl=openib--pml=^ucx,\
+openmpi4--btl=ofi--pml=^ucx,\
 openmpi4--btl=self--pml=ucx"
 
 export MPI_FLAVOURS=${MPI_FLAVOURS:-$DEFAULT_MPI_FLAVOURS}
