@@ -136,7 +136,7 @@ set_properties $HOST2
 phase_20(){
 	tmp=$(cpuid -v);
 	juLog -name="CPUID version: $tmp" cpuid -v
-	tmp=$(cpuid -1 | sed -n 2,5p);
+	tmp=$(cpuid -1 | sed -n 2,5p | sed -e "s/\"/'/g");
 	juLog -name="CPUID: $tmp" cpuid -1
 }
 run_phase 20 phase_20 "HPC"
