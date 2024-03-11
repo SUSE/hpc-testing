@@ -84,6 +84,9 @@ mpi_get_flavors()
 		15.4|15.5)
 			flavours=$(mpi_filter_flavour $flavours openmpi)
 			;;
+		15.6)
+			flavours=$(mpi_filter_flavour $flavours openmpi openmpi2 openmpi3)
+			;;
 		12.3|12.4|12.5)
 			flavours=$(mpi_filter_flavour $flavours openmpi2 openmpi3 openmpi4 mpich)
 			;;
