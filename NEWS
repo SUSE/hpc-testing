@@ -1,4 +1,45 @@
 - hpc-testing 0.6.0
+  * Add support for 15SP6
+  * common: mpi: tune tested settings
+  * NEWS: Update Changelog
+  * julog: display list of all failed tests
+  * ib: ipoib: test ipv6
+  * ib: ipobi: faster but more intensive IB tests
+  * ib: ipoib: add helper for driver reload
+  * common/mpi: extend openmpi[34] tests with specific BTLs
+  * common/mpi: Allow passing openmpi options
+  * common/mpi: Add support for 15.5
+  * ib: fabric-init: fix typo
+  * ib: fabric-init: more nodedesc debug
+  * ib: fabric-init: Display rdma-ndd status
+  * ib: fabric-init: Make nodedesc error easier to debug
+  * support sle15 sp5
+  * siw: Add siw testsuite
+  * vm-test: do a full driver cleanup and detect rogue interfaces
+  * rxe: detect if incompatible SW RDMA interface are available
+  * rxe: make fabric init common and take SW rdma type as input
+  * rxe-tests: check for HW RDMA
+  * vm-test: fix IPoIB extraction
+  * julog: restore regexp filtering
+  * julog: fix logs
+  * julog: cleanup and simplify
+  * vm-test: add easy script to run all tests on a 2VM setup
+  * rxe-tests: use refactored code and add missing tests
+  * ib: srp: do not run in VMs
+  * helpers: Add new ip addr log extractor
+  * nvme: move to common helpers
+  * mpi: cleanup filtering
+  * common: factor option parsing
+  * mpi: Factor mpi filtering code
+  * rxe: replace obsolete rxe_cfg
+  * helpers: cleanup: Add support for TW
+  * common.sh: Fix tpq returning the wrong errcode
+  * ib: fabric-init: Fix IPoIB name extraction
+  * srp: add test for bsc#1195874
+  * Fix 15.4 support for openmpi4
+  * Avoid warnings of missing argument in /etc/exports
+  * Add missing 15.4 to get required package list for installing
+- hpc-testing 0.6.0
   * Add support for SLES15SP[45]
   * Add support for Tumbleweed
   * Update rxe tests to use ip command
