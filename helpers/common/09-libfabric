@@ -19,11 +19,23 @@ test_libfabric()
 	local host=$1
 	local server_ip=$2
 	local client_ip=$3
+	local skipped_tests=""
 
-	tp $host "/usr/bin/runfabtests.sh -v -t short -e 'fi_rma_bw,fi_rdm_cntr_pingpong' verbs $server_ip $client_ip"
-	# Note for later: starting from fabtest v1.6,
-	# - the fi_ prefix for exclusion need to be removed
-	# - Multiple -e option are supported
-	# - exclude should specify the run option
+	case $(get_suse_version $host) in
+		15|15.1|15.2|15.3|15.4|15.5)
+			skipped_tests="-e fi_rma_bw,fi_rdm_cntr_pingpong"
+			;;
+		15.6)
+		    skipped_tests=""
+			;;
+		15.7)
+		    skipped_tests="-e fi_dgram_pingpong"
+		    ;;
+		*)
+		    # N/A
+		    true
+		    ;;
+        esac
+	tp $host "/usr/bin/runfabtests.sh -v -t short ${skipped_tests} verbs $server_ip $client_ip"
 }
 
