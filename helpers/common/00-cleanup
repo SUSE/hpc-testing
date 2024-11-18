@@ -75,7 +75,7 @@ get_common_package_list()
 			PACKAGE_LIST+=" mpitests-openmpi2 mpitests-mpich"
 			PACKAGE_LIST+=" mpitests-openmpi3 mpitests-openmpi4"
 			;;
-		15.6)
+		15.6|15.7)
 			PACKAGE_LIST+=" python3-targetcli-fb "
 			PACKAGE_LIST+=" mpitests-openmpi4 mpitests-mpich"
 			;;
