@@ -25,6 +25,13 @@ setup_ssh()
 			  ssh-keyscan $remote_ip >> .ssh/known_hosts"
 }
 
+nmcli_disable()
+{
+	local host=$1
+        local port=$2
+	tp $host "nmcli device set $port managed no || true"
+}
+
 get_srdma_port()
 {
 	local host=$1

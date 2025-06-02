@@ -140,6 +140,9 @@ IP6_1=$(tpq $HOST1 "ip addr show $IPPORT1" | ip_addr_show_to_ipv6)
 IP6_2=$(tpq $HOST2 "ip addr show $IPPORT2" | ip_addr_show_to_ipv6)
 
 phase_1_2(){
+	juLog_fatal -name=h1_disable_nm   "nmcli_disable $HOST1 $IPPORT1"
+	juLog_fatal -name=h2_disable_nm   "nmcli_disable $HOST2 $IPPORT2"
+
 	juLog_fatal -name=h1_ip_setup   "set_ipoib_down $HOST1 $IPPORT1; set_ipoib_up $HOST1 $IPPORT1 $IP1/24 $IP6_1"
 	juLog_fatal -name=h2_ip_setup   "set_ipoib_down $HOST2 $IPPORT2; set_ipoib_up $HOST2 $IPPORT2 $IP2/24 $IP6_2"
 
