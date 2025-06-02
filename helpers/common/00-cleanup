@@ -57,33 +57,37 @@ get_common_package_list()
 	local host=$1
 	PACKAGE_LIST="infiniband-diags rdma-ndd libibverbs-utils srp_daemon fabtests "
 	PACKAGE_LIST+=" mpitests-mvapich2"
-	PACKAGE_LIST+=" ibutils dapl-utils psmisc nfs-kernel-server"
+	PACKAGE_LIST+=" ibutils psmisc nfs-kernel-server"
 	PACKAGE_LIST+=" nvme-cli nvmetcli bc iputils"
 
 	case $(get_suse_version $host) in
 		15|15.1)
-			PACKAGE_LIST+=" python3-targetcli-fb "
+			PACKAGE_LIST+=" python3-targetcli-fb dapl-utils "
 			PACKAGE_LIST+=" mpitests-openmpi2 mpitests-mpich"
 			;;
 		15.2|15.3)
-			PACKAGE_LIST+=" python3-targetcli-fb "
+			PACKAGE_LIST+=" python3-targetcli-fb dapl-utils "
 			PACKAGE_LIST+=" mpitests-openmpi2 mpitests-mpich"
 			PACKAGE_LIST+=" mpitests-openmpi3"
 			;;
 		15.4|15.5)
-			PACKAGE_LIST+=" python3-targetcli-fb "
+			PACKAGE_LIST+=" python3-targetcli-fb dapl-utils "
 			PACKAGE_LIST+=" mpitests-openmpi2 mpitests-mpich"
 			PACKAGE_LIST+=" mpitests-openmpi3 mpitests-openmpi4"
 			;;
 		15.6|15.7)
-			PACKAGE_LIST+=" python3-targetcli-fb "
+			PACKAGE_LIST+=" python3-targetcli-fb dapl-utils "
 			PACKAGE_LIST+=" mpitests-openmpi4 mpitests-mpich"
 			;;
+                16.0)
+			PACKAGE_LIST+=" targetcli-fb "
+			PACKAGE_LIST+=" mpitests-openmpi4 mpitests-openmpi5 mpitests-mpich"
+			;;
 		42.3|12.3|12.4|12.5)
-			PACKAGE_LIST+=" mpitests-openmpi targetcli-fb "
+			PACKAGE_LIST+=" mpitests-openmpi targetcli-fb dapl-utils "
 			;;
 		2022*)
-			PACKAGE_LIST+=" python3-targetcli-fb "
+			PACKAGE_LIST+=" python3-targetcli-fb dapl-utils "
 			PACKAGE_LIST+=" mpitests-openmpi2 mpitests-mpich"
 			PACKAGE_LIST+=" mpitests-openmpi3 mpitests-openmpi4"
 			;;

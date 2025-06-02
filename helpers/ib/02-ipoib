@@ -31,10 +31,12 @@ set_ipoib_up()
 	local host=$1
 	local port=$2
 	local ipaddr=$3 #ip/netmask
+        local ipv6addr=$4
 
 	tp $host "ip link set dev $port up &&
 			  ip -4 addr flush $port &&
-			  ip addr add $ipaddr dev $port"
+			  ip addr add $ipaddr dev $port &&
+			  (ip addr add $ipv6addr dev $port || true)"
 }
 set_ipoib_down()
 {
@@ -67,18 +69,20 @@ driver_resetup()
     local host1=$3
     local ipport1=$4
     local ip1=$5
+    local ipv6_1=$6
 
-    local host2=$6
-    local ipport2=$7
-    local ip2=$8
+    local host2=$7
+    local ipport2=$8
+    local ip2=$9
+    local ipv6_2=${10}
 
     ip1_setup=""
     if [ "$ip1" != "" ]; then
-	ip1_setup="&& set_ipoib_up $host1 $ipport1 $ip1/24"
+	ip1_setup="&& set_ipoib_up $host1 $ipport1 $ip1/24 $ipv6_1"
     fi
     ip2_setup=""
     if [ "$ip2" != "" ]; then
-	ip2_setup="&& set_ipoib_up $host2 $ipport2 $ip2/24"
+	ip2_setup="&& set_ipoib_up $host2 $ipport2 $ip2/24 $ipv6_2"
     fi
 
     if [ $DO_MAD -eq 1 ]; then
@@ -106,7 +110,7 @@ test_ping6()
 	local remote_addr=$3
 	local pkt_size=$4
 
-	tp $host "ip neigh flush $remote_addr && ping6 -fq -t 3 -c 10000 -w 10 -I $interface -s $pkt_size $remote_addr"
+	tp $host "ip neigh flush $remote_addr && ping6 -fq -t 3 -c 10000 -w 10 -I $interface -s $pkt_size ${remote_addr}%${interface}"
 }
 
 test_sftp()
