@@ -135,10 +135,13 @@ run_phase 1 phase_1_1 "Fabric init (1/2)"
 # Do not wrap these as they export needed variables
 get_port $HOST1 1
 get_port $HOST2 2
+#Get IPv6 IPs
+IP6_1=$(tpq $HOST1 "ip addr show $IPPORT1" | ip_addr_show_to_ipv6)
+IP6_2=$(tpq $HOST2 "ip addr show $IPPORT2" | ip_addr_show_to_ipv6)
 
 phase_1_2(){
-	juLog_fatal -name=h1_ip_setup   "set_ipoib_down $HOST1 $IPPORT1; set_ipoib_up $HOST1 $IPPORT1 $IP1/24"
-	juLog_fatal -name=h2_ip_setup   "set_ipoib_down $HOST2 $IPPORT2; set_ipoib_up $HOST2 $IPPORT2 $IP2/24"
+	juLog_fatal -name=h1_ip_setup   "set_ipoib_down $HOST1 $IPPORT1; set_ipoib_up $HOST1 $IPPORT1 $IP1/24 $IP6_1"
+	juLog_fatal -name=h2_ip_setup   "set_ipoib_down $HOST2 $IPPORT2; set_ipoib_up $HOST2 $IPPORT2 $IP2/24 $IP6_2"
 
 	# Let IP settle down or SSH key setup might fail
 	sleep 5
@@ -160,9 +163,6 @@ phase_1_2(){
 
 run_phase 1 phase_1_2 "Fabric init (2/2)"
 
-#Get IPv6 IPs
-IP6_1=$(tpq $HOST1 "ip addr show $IPPORT1" | ip_addr_show_to_ipv6)
-IP6_2=$(tpq $HOST2 "ip addr show $IPPORT2" | ip_addr_show_to_ipv6)
 
 juLog_fatal -name=h1_check_ipv6 "[[ \"$IP6_1\" != \"\" ]]"
 juLog_fatal -name=h2_check_ipv6 "[[ \"$IP6_2\" != \"\" ]]"
@@ -175,7 +175,7 @@ juLog_fatal -name=h2_check_ipv6 "[[ \"$IP6_2\" != \"\" ]]"
 phase_2(){
 	local reload_driver=0
 
-	driver_resetup "reload_mlx5_driver" reload_mlx5_ib $HOST1 $IPPORT1 $IP1 $HOST2 $IPPORT2 $IP2
+	driver_resetup "reload_mlx5_driver" reload_mlx5_ib $HOST1 $IPPORT1 $IP1 $IP6_1 $HOST2 $IPPORT2 $IP2 $IP6_2
 
 	# Check if both cards support connected mode
 	if ! (is_connected_supported $HOST1 $IPPORT1 && is_connected_supported $HOST2 $IPPORT2); then
@@ -199,17 +199,17 @@ phase_2(){
 	   fi
 	   reload_driver=1
 
-	   driver_resetup "disable_enhanced" disable_enhanced $HOST1 "" "" $HOST2 "" ""
+	   driver_resetup "disable_enhanced" disable_enhanced $HOST1 "" "" "" $HOST2 "" "" ""
 	fi
 
 	for mode in $(echo $IPOIB_MODES | sed -e 's/,/ /g'); do
 		juLog_fatal -name=h1_${mode}_ip_mode "set_ipoib_mode $HOST1 $IPPORT1 $mode"
 		juLog_fatal -name=h1_${mode}_ip_down "set_ipoib_down $HOST1 $IPPORT1"
-		juLog_fatal -name=h1_${mode}_ip_up   "set_ipoib_up $HOST1 $IPPORT1 $IP1/24"
+		juLog_fatal -name=h1_${mode}_ip_up   "set_ipoib_up $HOST1 $IPPORT1 $IP1/24 $IP6_1"
 
 		juLog_fatal -name=h2_${mode}_ip_mode "set_ipoib_mode $HOST2 $IPPORT2 $mode"
 		juLog_fatal -name=h2_${mode}_ip_down "set_ipoib_down $HOST2 $IPPORT2"
-		juLog_fatal -name=h2_${mode}_ip_up   "set_ipoib_up $HOST2 $IPPORT2 $IP2/24"
+		juLog_fatal -name=h2_${mode}_ip_up   "set_ipoib_up $HOST2 $IPPORT2 $IP2/24 $IP6_2"
 
 		for size in 511 1025 2044 8192 32768 65492; do
 		    juLog -name=h1_${mode}_ping_$size "test_ping $HOST1 $IP2 $size"
@@ -225,7 +225,7 @@ phase_2(){
 	done
 	if [ $reload_driver -eq 1 ]; then
 	    # Put the driver back in enhanced mode and make sure IPoIB Ifs are reconfigured
-	   driver_resetup "enable_enhanced" enable_enhanced $HOST1 $IPPORT1 $IP1 $HOST2 $IPPORT2 $IP2
+	   driver_resetup "enable_enhanced" enable_enhanced $HOST1 $IPPORT1 $IP1 $IP6_1 $HOST2 $IPPORT2 $IP2 $IP6_2
 	fi
 }
 run_phase 2 phase_2 "IPoIB"
