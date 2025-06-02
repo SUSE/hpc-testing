@@ -22,7 +22,10 @@ openmpi3--btl=ofi--pml=^ucx,\
 openmpi3--btl=self--pml=ucx,\
 openmpi4,\
 openmpi4--btl=ofi--pml=^ucx,\
-openmpi4--btl=self--pml=ucx"
+openmpi4--btl=self--pml=ucx,\
+openmpi5,\
+openmpi5--btl=ofi--pml=cm,\
+openmpi5--btl=uct--pml=ucx"
 
 export MPI_FLAVOURS=${MPI_FLAVOURS:-$DEFAULT_MPI_FLAVOURS}
 
@@ -45,7 +48,7 @@ test_mpi()
 		openmpi|openmpi2)
 			RUN_ARGS="${RUN_ARGS} --allow-run-as-root"
 			;;
-		openmpi3|openmpi4)
+		openmpi3|openmpi4|openmpi5)
 			RUN_ARGS="${RUN_ARGS}  --allow-run-as-root --oversubscribe"
 			;;
 	esac
@@ -76,19 +79,22 @@ mpi_get_flavors()
 	local flavours=$2
 	case $(get_suse_version $host) in
 		15|15.1)
-			flavours=$(mpi_filter_flavour $flavours openmpi openmpi3 openmpi4)
+			flavours=$(mpi_filter_flavour $flavours openmpi openmpi3 openmpi4 openmpi5)
 			;;
 		15.2|15.3)
-			flavours=$(mpi_filter_flavour $flavours openmpi openmpi4)
+			flavours=$(mpi_filter_flavour $flavours openmpi openmpi4 openmpi5)
 			;;
 		15.4|15.5)
-			flavours=$(mpi_filter_flavour $flavours openmpi)
+			flavours=$(mpi_filter_flavour $flavours openmpi openmpi5)
 			;;
 		15.6|15.7)
+			flavours=$(mpi_filter_flavour $flavours openmpi openmpi2 openmpi3 openmpi5)
+			;;
+		16.0)
 			flavours=$(mpi_filter_flavour $flavours openmpi openmpi2 openmpi3)
 			;;
 		12.3|12.4|12.5)
-			flavours=$(mpi_filter_flavour $flavours openmpi2 openmpi3 openmpi4 mpich)
+			flavours=$(mpi_filter_flavour $flavours openmpi2 openmpi3 openmpi4 openmpi5 mpich)
 			;;
 		*)
 			# N/A

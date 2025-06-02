@@ -21,6 +21,14 @@ test_dapl(){
 	local ib2=$4
 	local ip2=$5
 
+	case $(get_suse_version $host1) in
+            16.0)
+                return 0
+                ;;
+            *)
+                ;;
+        esac
+
 	local dapl_name1=$(tpq $host1 "grep '$ib1' /etc/dat.conf | head -n 1 | awk  '{print \$1}'")
 	local dapl_name2=$(tpq $host2 "grep '$ib2' /etc/dat.conf | head -n 1 | awk  '{print \$1}'")
 

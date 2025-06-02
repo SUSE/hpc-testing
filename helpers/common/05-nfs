@@ -33,10 +33,19 @@ test_nfs()
 			   echo 'rdma 20049' > /proc/fs/nfsd/portlist &&
 	   		   exportfs -a &&
 			   dd if=/dev/urandom bs=1M count=64 of=/tmp/RAM/input"
-
+        mountpoint=""
+	case $(get_suse_version $server) in
+            16.0)
+                # NFSv4
+                mountpoint="/"
+                ;;
+            *)
+                mountpoint="/tmp/RAM"
+                ;;
+        esac
 	tp $client "modprobe xprtrdma &&
 	   		   mkdir -p /tmp/RAM &&
-			   mount -o rdma,port=20049 $server_ip:/tmp/RAM /tmp/RAM &&
+			   mount -o rdma,port=20049 $server_ip:$mountpoint /tmp/RAM &&
 			   (cat /proc/mounts | grep /tmp/RAM  | grep proto=rdma) &&
 			   sleep 1 &&
 			   dd if=/tmp/RAM/input bs=1M count=1024 of=/tmp/RAM/output &&
