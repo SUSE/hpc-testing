@@ -1,3 +1,11 @@
+- hpc-testing 0.7.0
+  * rxe-test: fix typo in test name
+  * common: fix bad egrep '*'
+  * helpers: add support for SL16.0
+  * ib: disable nmcli management
+  * ib: clean up IPoIB v6 handling
+  * common: libfabric: add per distro flags
+  * Add 15.7 support
 - hpc-testing 0.6.0
   * Add support for 15SP6
   * common: mpi: tune tested settings
