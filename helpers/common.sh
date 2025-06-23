@@ -43,6 +43,7 @@ tp_check_local()
 {
 	local host=$1
 	local varname=IS_LOCAL_$(echo $host | tr '.' '_')
+        local ip
 
 	# Check if the IP is local and store the value
 	if [ "${!varname}" == "" ]; then
@@ -109,6 +110,7 @@ load_helpers()
 {
 	local topdir=$1
 	local test_type=$2
+        local helper
 
 	source ${topdir}/helpers/julog.sh
 	for helper in $(ls ${topdir}/helpers/${test_type}/[0-9][0-9]* | grep -E -v '.*~$'); do
