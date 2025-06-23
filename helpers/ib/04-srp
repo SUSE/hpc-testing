@@ -15,62 +15,106 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+srp_restart_client()
+{
+    local client_board=$1
+    local client_port=$2
+    systemctl stop srp_daemon_port@${client_board}:${client_port} || true
+    systemctl restart srp_daemon; sleep 2
+    systemctl status srp_daemon_port@${client_board}:${client_port}
+    rmmod ib_srp || true
+}
+
+srp_setup_server()
+{
+    local server_wwn=$1
+    local client_wwn=$2
+
+    set +e
+    umount /tmp/hpc-test.mount
+    targetcli /backstores/fileio/ delete name=hpc-test
+    targetcli /srpt delete ib.$server_wwn
+    set -e
+
+    rm -Rf /tmp/hpc-test.io /tmp/hpc-test.mount
+    modprobe ib_srpt
+    targetcli /backstores/fileio create name=hpc-test file_or_dev=/tmp/hpc-test.io size=256M
+    targetcli /srpt create 0x$server_wwn
+    targetcli /srpt/ib.$server_wwn/luns create /backstores/fileio/hpc-test
+    targetcli /srpt/ib.$server_wwn/acls create 0x$client_wwn
+    mkfs -t ext3 /tmp/hpc-test.io
+    mkdir /tmp/hpc-test.mount
+    mount -o loop /tmp/hpc-test.io /tmp/hpc-test.mount
+    dd if=/dev/urandom bs=1M count=64 of=/tmp/hpc-test.mount/input
+    umount /tmp/hpc-test.mount
+}
+
+srp_run_client()
+{
+    local server_wwn=$1
+    local server_sys_wwn=$2
+    local server_sysguid=$3
+    local server_guid=$4
+    local client_board=$5
+    local client_port=$6
+    local block_device
+
+    set +e
+    umount /tmp/srp-hpc-test
+    rmmod ib_srp
+    rm -Rf /tmp/srp-hpc-test
+    set -e
+
+    modprobe ib_srp
+    mkdir /tmp/srp-hpc-test
+    (
+        ibsrpdm -c | grep "dgid=$server_wwn";
+	ibsrpdm -c | grep "dgid=$server_sys_wwn" | sed -e "s/$server_sysguid/$server_guid/g" | true
+    ) > "/sys/class/infiniband_srp/srp-$client_board-$client_port/add_target"
+    sleep 1
+    block_device=$(ls /sys/class/infiniband/"$client_board"/device/host*/target*/*:*/block)
+    mount /dev/$block_device /tmp/srp-hpc-test
+    cp -R /tmp/srp-hpc-test/input /tmp/srp-hpc-test/output
+    diff -q /tmp/srp-hpc-test/input /tmp/srp-hpc-test/output
+    umount /tmp/srp-hpc-test
+    rmmod ib_srp
+}
+
+srp_test_and_clear_server()
+{
+    set -e
+    mount -o loop /tmp/hpc-test.io /tmp/hpc-test.mount
+    diff -q /tmp/hpc-test.mount/input /tmp/hpc-test.mount/output
+    umount /tmp/hpc-test.mount
+}
+
 test_srp()
 {
-	local srp_server=$1
-	local server_guid=$(echo $2| sed -e 's/0x//')
-	local server_sysguid=$(echo $3 | sed -e 's/0x//')
-	local server_wwn="fe80000000000000${server_guid}"
-	local server_sys_wwn="fe80000000000000${server_sysguid}"
-	local server_board=$4
-	local server_port=$5
+    local srp_server=$1
+    local server_guid=$(echo $2| sed -e 's/0x//')
+    local server_sysguid=$(echo $3 | sed -e 's/0x//')
+    local server_wwn="fe80000000000000${server_guid}"
+    local server_sys_wwn="fe80000000000000${server_sysguid}"
+    local server_board=$4
+    local server_port=$5
 
-	local client=$6
-	local client_guid=$(echo $7 |  sed -e 's/0x//')
-	local client_wwn="0000000000000000${client_guid}"
-	local client_board=$8
-	local client_port=$9
+    local client=$6
+    local client_guid=$(echo $7 |  sed -e 's/0x//')
+    local client_wwn="0000000000000000${client_guid}"
+    local client_board=$8
+    local client_port=$9
 
-   if [ "$IN_VM" == "1" ]; then
-	   juLog -name=srp_skipping 'echo "Skipping SRP test as it does not work with SRIOV"'
-	   return 0
-   fi
+    if [ "$IN_VM" == "1" ]; then
+        juLog -name=srp_skipping 'echo "Skipping SRP test as it does not work with SRIOV"'
+	return 0
+    fi
 
-	# Make sure srp_daemon works (bsc#1195874)
-	tp $client "systemctl stop srp_daemon_port@${client_board}:${client_port} || true"
-	tp $client 'systemctl restart srp_daemon; sleep 2'
-	tp $client "systemctl status srp_daemon_port@${client_board}:${client_port}"
+    # Make sure srp_daemon works (bsc#1195874)
+    tp_fun $client srp_restart_client "${client_board}" "${client_port}"
 
-	# Cleanup old stuff
-	tp $client 'rmmod ib_srp || true'
-	tp $srp_server "umount /tmp/hpc-test.mount || true;
-	   			   	targetcli /backstores/fileio/ delete name=hpc-test || true;
-                    targetcli /srpt delete ib.$server_wwn || true;
-					rm -Rf /tmp/hpc-test.io /tmp/hpc-test.mount &&
-					modprobe ib_srpt &&
-					targetcli /backstores/fileio create name=hpc-test file_or_dev=/tmp/hpc-test.io size=256M &&
-					targetcli /srpt create 0x$server_wwn &&
-					targetcli /srpt/ib.$server_wwn/luns create /backstores/fileio/hpc-test &&
-					targetcli /srpt/ib.$server_wwn/acls create 0x$client_wwn &&
-					mkfs -t ext3 /tmp/hpc-test.io &&
-					mkdir /tmp/hpc-test.mount && 
-					mount -o loop /tmp/hpc-test.io /tmp/hpc-test.mount &&
-					dd if=/dev/urandom bs=1M count=64 of=/tmp/hpc-test.mount/input &&
-					umount /tmp/hpc-test.mount"
-	tp $client '(umount /tmp/srp-hpc-test; rmmod ib_srp) || true;
-	   		    rm -Rf /tmp/srp-hpc-test || true;
-				modprobe ib_srp &&
-				mkdir /tmp/srp-hpc-test &&
-				(ibsrpdm -c | grep "dgid='$server_wwn'";
-				 ibsrpdm -c | grep "dgid='$server_sys_wwn'" | sed -e "s/'$server_sysguid'/'$server_guid'/g" | true) > /sys/class/infiniband_srp/srp-'$client_board'-'$client_port'/add_target &&
-				sleep 1 &&
-				block_device=$(ls /sys/class/infiniband/'$client_board'/device/host*/target*/*:*/block) &&
-				mount /dev/$block_device /tmp/srp-hpc-test &&
-				cp -R /tmp/srp-hpc-test/input /tmp/srp-hpc-test/output &&
-				diff -q /tmp/srp-hpc-test/input /tmp/srp-hpc-test/output&&
-				umount /tmp/srp-hpc-test &&
-				rmmod ib_srp'
-	tp $srp_server "mount -o loop /tmp/hpc-test.io /tmp/hpc-test.mount &&
-					diff -q /tmp/hpc-test.mount/input /tmp/hpc-test.mount/output &&
-					umount /tmp/hpc-test.mount"
+    tp_fun $srp_server srp_setup_server $server_wwn $client_wwn
+    tp_fun $client srp_run_client  $server_wwn $server_sys_wwn $server_sysguid \
+           $server_guid $client_board $client_port
+
+    tp_fun $srp_server srp_test_and_clear_server
 }

@@ -34,11 +34,16 @@ kill_opensm()
 	tp $host 'killall opensm || true; sleep 1; killall -9 opensm || true';
 }
 
+do_reset_all_ports()
+{
+    set +e
+    for port_guid in $(ibstat -p); do
+	ibportstate -G $port_guid reset
+    done
+}
 reset_all_ports()
 {
 	local host=$1
 
-	tp $host 'for port_guid in $(ibstat -p); do
-	   		 	   ibportstate -G $port_guid reset || true;
-			   done'
+	tp_fun $host do_reset_all_ports
 }
