@@ -43,6 +43,7 @@ tp_check_local()
 {
 	local host=$1
 	local varname=IS_LOCAL_$(echo $host | tr '.' '_')
+        local ip
 
 	# Check if the IP is local and store the value
 	if [ "${!varname}" == "" ]; then
@@ -58,10 +59,11 @@ tp_check_local()
 	return ${!varname}
 }
 
+SSH_COMMAND="timeout 300 ssh -o ConnectTimeout=5 -o BatchMode=yes"
+
 tp()
 {
 	local ip=$1
-	local host="ssh:$ip"
 	shift
 
 	if tp_check_local $ip; then
@@ -74,17 +76,20 @@ tp()
 		)
 		set +e
 	else
-		echo "twopence_command -b $host $@"
-		set -e
-		twopence_command -t 300 -b $host "set -x; $@"
-		set +e
+            echo "ssh $ip $@"
+            set -e
+            cat <<EOF | ${SSH_COMMAND} $ip "bash -"
+shopt -s huponexit
+set -x
+$@
+EOF
+            set +e
 	fi
 }
 
 tpq()
 {
 	local ip=$1
-	local host="ssh:$ip"
 	local ret=0
 	shift
 
@@ -98,7 +103,7 @@ tpq()
 		set +e
 	else
 		set -e
-		twopence_command -t 300 -b $host "$@"
+                ${SSH_COMMAND} $ip  "$@"
 		ret=$?
 		set +e
 	fi
@@ -109,6 +114,7 @@ load_helpers()
 {
 	local topdir=$1
 	local test_type=$2
+        local helper
 
 	source ${topdir}/helpers/julog.sh
 	for helper in $(ls ${topdir}/helpers/${test_type}/[0-9][0-9]* | grep -E -v '.*~$'); do

@@ -1,3 +1,4 @@
+  * Replace twopence by SSH
 - hpc-testing 0.7.0
   * rxe-test: fix typo in test name
   * common: fix bad egrep '*'

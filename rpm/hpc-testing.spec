@@ -36,14 +36,18 @@ Recommends:     fabtests
 Recommends:     mpitests-mvapich2
 Recommends:     mpitests-openmpi
 Recommends:     mpitests-openmpi2
+Recommends:     mpitests-openmpi3
+Recommends:     mpitests-openmpi4
+Recommends:     mpitests-openmpi5
 Recommends:     mpitests-mpich
 Recommends:     mpitests
 Recommends:     ibutils
 Recommends:     targetcli-fb
+Recommends:     python3-targetcli-fb
+Recommends:     nfs-kernel-server
 Recommends:     nvme-cli
 Recommends:     nvmetcli
 Recommends:     dapl-utils
-Recommends:     twopence-shell-client
 BuildArch:      noarch
 Requires:       bc
 
