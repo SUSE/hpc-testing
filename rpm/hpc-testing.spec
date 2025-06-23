@@ -43,7 +43,6 @@ Recommends:     targetcli-fb
 Recommends:     nvme-cli
 Recommends:     nvmetcli
 Recommends:     dapl-utils
-Recommends:     twopence-shell-client
 BuildArch:      noarch
 Requires:       bc
 
