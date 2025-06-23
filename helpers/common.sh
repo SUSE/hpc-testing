@@ -73,7 +73,7 @@ tp()
 		(
 			cd $HOME;
 			set -x
-			eval $@
+			eval "$@"
 		)
 		set +e
 	else
@@ -107,7 +107,7 @@ tpq()
 		set -e
 		(
 			cd $HOME;
-			eval $@
+			eval "$@"
 		)
 		ret=$?
 		set +e
