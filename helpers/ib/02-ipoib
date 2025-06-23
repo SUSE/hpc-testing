@@ -36,7 +36,7 @@ set_ipoib_up()
 	tp $host "ip link set dev $port up &&
 			  ip -4 addr flush $port &&
 			  ip addr add $ipaddr dev $port &&
-			  (ip addr add $ipv6addr dev $port || true)"
+			  (ip addr add $ipv6addr/64 dev $port || true)"
 }
 set_ipoib_down()
 {
