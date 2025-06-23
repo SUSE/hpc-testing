@@ -88,6 +88,15 @@ EOF
 	fi
 }
 
+tp_fun()
+{
+    local ip=$1
+    shift
+    local fn=$1
+    shift
+    tp $ip "$(declare -f $fn); $fn $@"
+}
+
 tpq()
 {
 	local ip=$1
@@ -109,6 +118,15 @@ tpq()
 		set +e
 	fi
 	return $ret
+}
+
+tpq_fun()
+{
+    local ip=$1
+    shift
+    local fn=$1
+    shift
+    tpq $ip "$(declare -f $fn); $fn $@"
 }
 
 load_helpers()
