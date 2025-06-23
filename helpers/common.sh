@@ -1,5 +1,6 @@
+#!/bin/bash
 # hpc-testing
-# Copyright (C) 2018 SUSE LLC
+# Copyright (C) 2025 SUSE LLC
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -72,7 +73,7 @@ tp()
 		(
 			cd $HOME;
 			set -x
-			eval $@
+			eval "$@"
 		)
 		set +e
 	else
@@ -87,6 +88,15 @@ EOF
 	fi
 }
 
+tp_fun()
+{
+    local ip=$1
+    shift
+    local fn=$1
+    shift
+    tp $ip "$(declare -f $fn); $fn $@"
+}
+
 tpq()
 {
 	local ip=$1
@@ -97,7 +107,7 @@ tpq()
 		set -e
 		(
 			cd $HOME;
-			eval $@
+			eval "$@"
 		)
 		ret=$?
 		set +e
@@ -108,6 +118,15 @@ tpq()
 		set +e
 	fi
 	return $ret
+}
+
+tpq_fun()
+{
+    local ip=$1
+    shift
+    local fn=$1
+    shift
+    tpq $ip "$(declare -f $fn); $fn $@"
 }
 
 load_helpers()

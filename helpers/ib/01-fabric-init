@@ -1,5 +1,6 @@
+#!/bin/bash
 # hpc-testing
-# Copyright (C) 2018 SUSE LLC
+# Copyright (C) 2025 SUSE LLC
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,62 +37,69 @@ start_opensm()
 	tp $host "opensm --daemon $*"
 }
 
+extract_port_info(){
+    local boards board
+    local port_count port
+    local status res
+    local pci_id
+    local netif netif_pci_id ipoib_if
+    local guid lid sysguid
+    boards=$(/usr/sbin/ibstat -l | sort -V)
+    for board in $boards; do
+	port_count=$(/usr/sbin/ibstat $board -p | wc -l)
+	for port in $(seq 1 $port_count); do
+		res=$(/usr/sbin/ibstat $board $port)
+		status=$(echo "$res" | grep "State:" | awk "{print \$NF}")
+		if [ "$status" == "Active" ]; then
+			pci_id=$(basename $(readlink -f /sys/class/infiniband/mlx5_0/device))
+			for netif in $(ls /sys/class/net/); do
+				netif_pci_id=$(basename $(readlink -f /sys/class/net/$netif/device))
+				if [ "$pci_id" == "$netif_pci_id" ]; then
+				   ipoib_if=$netif
+				   break
+				fi
+			done
+			guid=$(echo "$res" | grep "Port GUID:" | awk "{print \$NF}")
+			lid=$(echo "$res" | grep "Base lid:" | awk "{print \$NF}")
+			sysguid=$(ibstat $board | grep "System image GUID:" | awk "{print \$NF}")
+			echo "$ipoib_if $guid $lid $board $port $sysguid"
+			return 0;
+		fi;
+	done;
+    done
+}
+
 get_port()
 {
 	local host=$1
 	local host_id=$2
+        local res
 
-	res=$(tpq $host '(boards=$(/usr/sbin/ibstat -l | sort -V);
-for board in $boards; do
-	port_count=$(/usr/sbin/ibstat $board -p | wc -l);
-	for port in $(seq 1 $port_count); do
-		res=$(/usr/sbin/ibstat $board $port);
-		status=$(echo "$res" | grep "State:" | awk "{print \$NF}");
-		if [ "$status" == "Active" ]; then
-			pci_id=$(basename $(readlink -f /sys/class/infiniband/mlx5_0/device));
-			for netif in $(ls /sys/class/net); do
-				netif_pci_id=$(basename $(readlink -f /sys/class/net/$netif/device));
-				if [ "$pci_id" == "$netif_pci_id" ]; then
-				   ipoib_if=$netif;
-				   break;
-				fi;
-			done;
-			guid=$(echo "$res" | grep "Port GUID:" | awk "{print \$NF}");
-			lid=$(echo "$res" | grep "Base lid:" | awk "{print \$NF}");
-			sysguid=$(ibstat $board | grep "System image GUID:" | awk "{print \$NF}");
-			echo "$ipoib_if $guid $lid $board $port $sysguid";
-			exit 0;
-		fi;
-	done;
-done
-)')
+        local data
+	res=$(tpq_fun $host extract_port_info)
 
 	if [ "$res" == "" ]; then
 		fatal_error "Failed to find an active port on $host"
 	fi
 
-	ibf=$(echo $res | awk '{ print $1}')
-	guid=$(echo $res | awk '{ print $2}')
-	lid=$(echo $res | awk '{ print $3}')
-	hca=$(echo $res | awk '{ print $4}')
-	port=$(echo $res | awk '{ print $5}')
-	sysguid=$(echo $res | awk '{ print $6}')
-	eval export IPPORT$host_id=$ibf
-	eval export GUID$host_id=$guid
-	eval export LID$host_id=$lid
-	eval export HCA$host_id=$hca
-	eval export IBPORT$host_id=$port
-	eval export SYSGUID$host_id=$sysguid
+        read -a array <<< "$res"
 
-	juLogSetProperty $host.ip_if $ibf
-	juLogSetProperty $host.guid $guid
-	juLogSetProperty $host.lid $lid
-	juLogSetProperty $host.hca $hca
-	juLogSetProperty $host.port $port
-	juLogSetProperty $host.sysguid $sysguid
+	eval export IPPORT$host_id=${array[0]}
+	eval export GUID$host_id=${array[1]}
+	eval export LID$host_id=${array[2]}
+	eval export HCA$host_id=${array[3]}
+	eval export IBPORT$host_id=${array[4]}
+	eval export SYSGUID$host_id=${array[5]}
 
-	echo "[SUCCESS] Host $host uses interface $ibf."\
-		 " Board=$board Port=$port GUID=$guid LID=$lid SYSGUID=$sysguid"
+	juLogSetProperty $host.ip_if ${array[0]}
+	juLogSetProperty $host.guid ${array[1]}
+	juLogSetProperty $host.lid ${array[2]}
+	juLogSetProperty $host.hca ${array[3]}
+	juLogSetProperty $host.port ${array[4]}
+	juLogSetProperty $host.sysguid ${array[5]}
+
+	echo "[SUCCESS] Host $host uses interface ${array[0]}."\
+		 " Board=${array[3]} Port=${array[4]} GUID=${array[1]} LID=${array[2]} SYSGUID=${array[5]}"
 }
 
 test_ibdiagnet()

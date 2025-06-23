@@ -1,3 +1,4 @@
+#! /bin/bash
 # hpc-testing
 # Copyright (C) 2018-2022 SUSE LLC
 # 
@@ -14,6 +15,46 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+nfs_do_export()
+{
+    set -e
+    local subnet=$1
+    exportfs -u -a
+    systemctl stop nfs-server
+    (! (mount | grep /tmp/RAM) || umount -f /tmp/RAM)
+    mkdir -p /tmp/RAM && mount -t tmpfs -o size=2G tmpfs /tmp/RAM
+    echo "/tmp/RAM $subnet/255.255.255.0(fsid=0,rw,async,insecure,no_root_squash,no_subtree_check)" > /etc/exports
+    systemctl start nfs-server
+    modprobe svcrdma
+    echo 'rdma 20049' > /proc/fs/nfsd/portlist
+    exportfs -a
+    dd if=/dev/urandom bs=1M count=64 of=/tmp/RAM/input
+}
+
+nfs_do_mount()
+{
+    local server_ip=$1
+    local mountpoint=$2
+    set -e
+    modprobe xprtrdma
+    mkdir -p /tmp/RAM
+    mount -o rdma,port=20049 $server_ip:$mountpoint /tmp/RAM
+    (cat /proc/mounts | grep /tmp/RAM  | grep proto=rdma)
+    sleep 1
+    dd if=/tmp/RAM/input bs=1M count=1024 of=/tmp/RAM/output
+    diff -q /tmp/RAM/input /tmp/RAM/output
+}
+
+nfs_server_clean()
+{
+    set -e
+    exportfs -u -a
+    systemctl stop nfs-server
+    sleep 1
+    umount -f /tmp/RAM
+    echo > /etc/exports
+}
+
 test_nfs()
 {
 	local server=$1
@@ -23,16 +64,8 @@ test_nfs()
 	tp $client "! (mount | grep /tmp/RAM) || umount -f /tmp/RAM"
 
 	subnet=$(echo $server_ip | sed -e 's/\.[0-9]\+$/.0/')
-	tp $server "exportfs -u -a &&
-	   		   systemctl stop nfs-server &&
-			   (! (mount | grep /tmp/RAM) || umount -f /tmp/RAM) &&
-			   mkdir -p /tmp/RAM && mount -t tmpfs -o size=2G tmpfs /tmp/RAM &&
-			   echo '/tmp/RAM   $subnet/255.255.255.0(fsid=0,rw,async,insecure,no_root_squash,no_subtree_check)'> /etc/exports &&
-			   systemctl start nfs-server &&
-			   modprobe svcrdma &&
-			   echo 'rdma 20049' > /proc/fs/nfsd/portlist &&
-	   		   exportfs -a &&
-			   dd if=/dev/urandom bs=1M count=64 of=/tmp/RAM/input"
+	tp_fun $server nfs_do_export $subnet
+
         mountpoint=""
 	case $(get_suse_version $server) in
             16.0)
@@ -43,20 +76,10 @@ test_nfs()
                 mountpoint="/tmp/RAM"
                 ;;
         esac
-	tp $client "modprobe xprtrdma &&
-	   		   mkdir -p /tmp/RAM &&
-			   mount -o rdma,port=20049 $server_ip:$mountpoint /tmp/RAM &&
-			   (cat /proc/mounts | grep /tmp/RAM  | grep proto=rdma) &&
-			   sleep 1 &&
-			   dd if=/tmp/RAM/input bs=1M count=1024 of=/tmp/RAM/output &&
-			   diff -q /tmp/RAM/input /tmp/RAM/output"
+	tp_fun $client nfs_do_mount "$server_ip" "$mountpoint"
 	tp $server "diff -q /tmp/RAM/input /tmp/RAM/output"
 
 	# Cleanup
 	tp $client "umount -f /tmp/RAM"
-	tp $server "exportfs -u -a &&
-	   		   systemctl stop nfs-server &&
-			   sleep 1 &&
-			   umount -f /tmp/RAM &&
-			   echo > /etc/exports"
+	tp $server nfs_server_clean
 }
