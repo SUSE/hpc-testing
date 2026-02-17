@@ -120,6 +120,13 @@ openmpi4--btl=self--pml=ucx,\
 openmpi5--btl=ofi--pml=cm,\
 openmpi5--btl=uct--pml=ucx"
             ;;
+	16.1)
+	    flavours="mvapich2,mvapich4-ucx,mvapich4-ofi,mpich,openmpi4,openmpi5,\
+openmpi4--btl=ofi--pml=^ucx,\
+openmpi4--btl=self--pml=ucx,\
+openmpi5--btl=ofi--pml=cm,\
+openmpi5--btl=uct--pml=ucx"
+            ;;
         2025*)
 	    flavours="mvapich2,mpich,openmpi4,openmpi5,\
 mvapich3-ofi,mvapich3-ucx,\

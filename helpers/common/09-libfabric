@@ -20,23 +20,38 @@ test_libfabric()
     local host=$1
     local server_ip=$2
     local client_ip=$3
-    local skipped_tests=""
+
+    local run_verbs=1
+    local verbs_options=""
+
+    local run_verbs_rxm=0
+    local verbs_rxm_options=""
 
     case $(get_suse_version $host) in
 	15|15.1|15.2|15.3|15.4|15.5)
-	    skipped_tests="-e fi_rma_bw,fi_rdm_cntr_pingpong"
+	    verbs_options="-e fi_rma_bw,fi_rdm_cntr_pingpong"
 	    ;;
 	15.6)
-	    skipped_tests=""
+	    verbs_options=""
 	    ;;
 	15.7|16.0|2025*)
-	    skipped_tests="-e fi_dgram_pingpong"
+	    verbs_options="-e fi_dgram_pingpong"
+	    ;;
+        2026*|16.1)
+	    verbs_options="-e fi_rma_bw,fi_dgram_pingpong"
+            run_verbs_rxm=1
+	    verbs_rxm_options="-e fi_dgram_pingpong"
 	    ;;
 	*)
 	    # N/A
 	    true
 	    ;;
     esac
-    tp $host "/usr/bin/runfabtests.sh -v -t short ${skipped_tests} verbs $server_ip $client_ip"
+    if [ $run_verbs -ne 0 ]; then
+        tp $host "/usr/bin/runfabtests.sh -v -t short ${verbs_options} verbs $server_ip $client_ip"
+    fi
+    if [ $run_verbs_rxm -ne 0 ]; then
+        tp $host "/usr/bin/runfabtests.sh -v -t short ${verbs_rxm_options} 'verbs;ofi_rxm' $server_ip $client_ip"
+    fi
 }
 

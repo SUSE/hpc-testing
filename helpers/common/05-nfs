@@ -68,7 +68,7 @@ test_nfs()
 
     mountpoint=""
     case $(get_suse_version $server) in
-        16.0)
+        16.*)
             # NFSv4
             mountpoint="/"
             ;;
