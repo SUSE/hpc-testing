@@ -16,7 +16,7 @@ if [ ! -f "$INPUT_FILE" ]; then
 fi
 
 # Extract header
-echo "Test_Name,Data_Type,$(grep -E "^\s*#bytes" "$INPUT_FILE" -A 22 | grep -E "^\s*[0-9]+" | awk '{print $1}' | sort -un | tr '\n' ',' | sed 's/,$//')" > "$OUTPUT_FILE"
+echo "Test_Name,Data_Type,$(grep --binary-files text -E "^\s*#bytes" "$INPUT_FILE" -A 22 | grep -E "^\s*[0-9]+" | awk '{print $1}' | sort -un | tr '\n' ',' | sed 's/,$//')" > "$OUTPUT_FILE"
 
 # Process data
 awk '
