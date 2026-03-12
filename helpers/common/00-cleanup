@@ -60,7 +60,7 @@ get_common_package_list()
     PACKAGE_LIST="infiniband-diags rdma-ndd libibverbs-utils srp_daemon fabtests "
     PACKAGE_LIST+=" rdma-core mvapich2 mpitests-mvapich2 openucx-tools"
     PACKAGE_LIST+=" ibutils psmisc nfs-kernel-server"
-    PACKAGE_LIST+=" nvme-cli nvmetcli bc iputils"
+    PACKAGE_LIST+=" nvme-cli nvmetcli bc iputils perftest"
 
     case $(get_suse_version $host) in
 	42.3|12.3|12.4|12.5)

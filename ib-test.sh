@@ -206,6 +206,7 @@ phase_7(){
 	  	  test_ibv_pingpong ibv_${mode}_pingpong $HOST2 $HCA2 $IBPORT2 $HOST1 $HCA1 $IBPORT1
         )"
     done
+    rdma_perf  $HOST1 $HCA1 $IBPORT1 $HOST2 $HCA2 $IBPORT2
 }
 run_phase 7 phase_7 "RDMA/Verbs"
 
