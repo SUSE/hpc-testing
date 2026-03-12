@@ -34,8 +34,10 @@ test_libfabric()
 	15.6)
 	    verbs_options=""
 	    ;;
+        # Not fi_rma_bw actually works, but some of its settings trigger the expected -ENODATA
+        # and fabtests handles it badly, leaving the server running and causing mayhem on the next run
 	15.7|16.0|2025*)
-	    verbs_options="-e fi_dgram_pingpong"
+	    verbs_options="-e fi_rma_bw,fi_dgram_pingpong"
 	    ;;
         2026*|16.1)
 	    verbs_options="-e fi_rma_bw,fi_dgram_pingpong"
