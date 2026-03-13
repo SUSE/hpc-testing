@@ -21,6 +21,21 @@ test_libfabric()
     local server_ip=$2
     local client_ip=$3
 
+    local cmd="/usr/bin/runfabtests.sh"
+    # runfabtest is broken at least up to 2.5.0.
+    # When a client exits with ENOSYS/ENODATA, the server sometime stays up
+    # runfabtest tries to kill it, but it usually ends up killing ssh and not the spawnerd process.
+    # This causes mayhem in the next run as we have options mismatch
+    # Use this weird macro to replace the kill -9 by a
+    # kill -9 + cleanup + ignore exit code and reuse the client one
+    local -r cleanedup_cmd='bash <(sed '\''/^[[:space:]]*kill -9 \$s_pid/,/s_ret=\$\?/c\
+            kill -9 $s_pid 2> /dev/null\
+            cleanup\
+            s_ret=$c_ret\
+        else\
+            wait $s_pid\
+            s_ret=$?\
+        fi'\'' /usr/bin/runfabtests.sh)'
     local run_verbs=1
     local verbs_options=""
 
@@ -37,12 +52,14 @@ test_libfabric()
         # Not fi_rma_bw actually works, but some of its settings trigger the expected -ENODATA
         # and fabtests handles it badly, leaving the server running and causing mayhem on the next run
 	15.7|16.0|2025*)
-	    verbs_options="-e fi_rma_bw,fi_dgram_pingpong"
+	    verbs_options="-e fi_dgram_pingpong"
+            cmd=$cleanedup_cmd
 	    ;;
         2026*|16.1)
-	    verbs_options="-e fi_rma_bw,fi_dgram_pingpong"
+	    verbs_options="-e fi_dgram_pingpong"
             run_verbs_rxm=1
 	    verbs_rxm_options="-e fi_dgram_pingpong"
+            cmd=$cleanedup_cmd
 	    ;;
 	*)
 	    # N/A
@@ -50,10 +67,10 @@ test_libfabric()
 	    ;;
     esac
     if [ $run_verbs -ne 0 ]; then
-        tp $host "/usr/bin/runfabtests.sh -v -t short ${verbs_options} verbs $server_ip $client_ip"
+        tp $host "${cmd} -v -t short ${verbs_options} verbs $server_ip $client_ip"
     fi
     if [ $run_verbs_rxm -ne 0 ]; then
-        tp $host "/usr/bin/runfabtests.sh -v -t short ${verbs_rxm_options} 'verbs;ofi_rxm' $server_ip $client_ip"
+        tp $host "${cmd} -v -t short ${verbs_rxm_options} 'verbs;ofi_rxm' $server_ip $client_ip"
     fi
 }
 
