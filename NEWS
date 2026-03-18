@@ -1,4 +1,8 @@
   * SLE 16.1 support
+  * Add perftest bandwidth and latency tests
+  * Export all tests performances as CSV
+  * Fix runfabtests.sh issue after a skipped test
+  * Add a test report generator
 - hpc-testing 0.8.0
   * Replace twopence by SSH
   * SLE 16.0 support
