@@ -89,6 +89,10 @@ rdma_perf(){
     done
     echo "$header" > "$CSV_FILE"
 
+    HUGEPAGE1=$(tpq $host1 "sysctl vm.nr_hugepages | awk '{print \$NF}'; sysctl -w vm.nr_hugepages=2048 > /dev/null")
+    HUGEPAGE2=$(tpq $host2 "sysctl vm.nr_hugepages | awk '{print \$NF}'; sysctl -w vm.nr_hugepages=2048 > /dev/null")
+
+
     # --- Execute Test Matrix ---
     for testname in "${TEST_NAMES[@]}"; do
         for qp in "${QP_TYPES[@]}"; do
@@ -116,7 +120,7 @@ rdma_perf(){
 
             # --- Configure Options for --all (-a) ---
             # Notice we dropped -s $size in favor of -a
-            IBV_EXTRA_OPTS="-c $qp -a"
+            IBV_EXTRA_OPTS="-c $qp -a --use_hugepages"
             if [[ "$testname" == *"_bw" ]]; then
                 IBV_EXTRA_OPTS="$IBV_EXTRA_OPTS -F"
             fi
@@ -157,4 +161,8 @@ rdma_perf(){
             echo "$csv_row" >> "$CSV_FILE"
         done
     done
+
+    # Restore huge page count to original value
+    tp $host1 "sysctl -w vm.nr_hugepages=$HUGEPAGE1"
+    tp $host2 "sysctl -w vm.nr_hugepages=$HUGEPAGE2"
 }
