@@ -14,7 +14,7 @@ def parse_csvs(root_dir):
         "results": {} # Structure: { testname: { config: [results...] } }
     }
     
-    csv_files = glob.glob(os.path.join(root_dir, 'results', '*', '*.csv'))
+    csv_files = glob.glob(os.path.join(root_dir, '../', 'results', '*', '*.csv'))
     
     for filepath in csv_files:
         # Extract config from path: results/<distro>/<testenv>.csv
