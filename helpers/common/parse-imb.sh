@@ -15,15 +15,13 @@ if [ ! -f "$INPUT_FILE" ]; then
     exit 1
 fi
 
-# Extract header
-echo "Test_Name,Data_Type,$(grep --binary-files text -E "^\s*#bytes" "$INPUT_FILE" -A 22 | grep -E "^\s*[0-9]+" | awk '{print $1}' | sort -un | tr '\n' ',' | sed 's/,$//')" > "$OUTPUT_FILE"
-
 # Process data
 awk '
     # Set the test name
     /^# Benchmarking/ {
         test_name = $3
         mode = ""
+        in_valid_test = 0
     }
 
     # Set the mode
@@ -35,9 +33,11 @@ awk '
     /^\s+#bytes/ {
         full_test_name = test_name mode
         data_types[full_test_name] = $NF
+        in_valid_test = 1
     }
     # Process data lines
     /^\s*[0-9]+/ {
+        if (!in_valid_test) next
         full_test_name = test_name mode
 
         # If we have not seen this test before, add it to our ordered list
@@ -58,6 +58,13 @@ awk '
 
         n = asorti(sizes, sorted_sizes, "@ind_num_asc")
 
+        # Print header
+        header = "Test_Name,Data_Type"
+        for (j = 1; j <= n; j++) {
+            header = header "," sorted_sizes[j]
+        }
+        print header
+
         # Print results in the order they were found
         for (i = 0; i < test_idx; i++) {
             test = test_order[i]
@@ -72,4 +79,4 @@ awk '
             print line
         }
     }
-' "$INPUT_FILE" >> "$OUTPUT_FILE"
+' "$INPUT_FILE" > "$OUTPUT_FILE"
