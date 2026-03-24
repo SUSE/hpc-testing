@@ -1,3 +1,4 @@
+- hpc-testing 0.9.0
   * SLE 16.1 support
   * Add perftest bandwidth and latency tests
   * Export all tests performances as CSV
