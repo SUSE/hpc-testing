@@ -46,6 +46,9 @@ test_mpi()
 	        ENV_ARGS="MV2_ENABLE_AFFINITY=0 MV2_SUPPRESS_JOB_STARTUP_PERFORMANCE_WARNING=1"
             fi
             ;;
+        mpich)
+            ENV_ARGS="RDMAV_HUGEPAGES_SAFE=1"
+            ;;
     esac
     RUN_ARGS="--host $ip1,$ip2 -np 2 ${RUN_ARGS}"
 
