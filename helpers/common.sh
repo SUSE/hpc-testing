@@ -205,6 +205,7 @@ export END_PHASE=${END_PHASE:-$DEFAULT_END_PHASE}
 export IN_VM=0
 export HOST1=
 export HOST2=
+export EXCLUDE_TESTS=
 
 common_usage(){
     echo "  -h, --help                     Display usage"
@@ -215,6 +216,7 @@ common_usage(){
     echo "      --in-vm                    Test is being run in a virtual machine"
     echo "  -S, --suite <name>             Set JUnit testsuite name"
     echo "  -M, --mpi <mpi>[,<mpi>...]     Comma separated list of MPI flavours to test"
+    echo "  -x, --exclude <name>[,<name>...]  Comma separated list of test names to skip"
 
 }
 
@@ -247,6 +249,10 @@ common_parse(){
             ;;
 	-M|--mpi)
 	    MPI_FLAVOURS=$2
+	    return 2
+	    ;;
+	-x|--exclude)
+	    EXCLUDE_TESTS=$2
 	    return 2
 	    ;;
 	--help|-h)
