@@ -73,10 +73,10 @@ juLogClean() {
 juLog() {
 
   # parse arguments
-  local ya="" icase="" name="" ereg="" icase="" cmd=""
+  local ya="" icase="" raw_name="" name="" ereg="" cmd=""
   while [ -z "$ya" ]; do
     case "$1" in
-      -name=*)   name=$juASSERTS-`echo "$1" | sed -e 's/-name=//'`;   shift;;
+      -name=*)   raw_name=`echo "$1" | sed -e 's/-name=//'`; name=$juASSERTS-$raw_name;   shift;;
       -ierror=*) ereg=`echo "$1" | sed -e 's/-ierror=//'`; icase="-i"; shift;;
       -error=*)  ereg=`echo "$1" | sed -e 's/-error=//'`;  shift;;
       *)         ya=1;;
@@ -85,7 +85,8 @@ juLog() {
 
   # use first arg as name if it was not given
   if [ -z "$name" ]; then
-    name="$juASSERTS-$1"
+    raw_name=$1
+    name="$juASSERTS-$raw_name"
   fi
 
   # calculate command to eval
@@ -96,6 +97,19 @@ juLog() {
      cmd="$cmd \"$1\""
      shift
   done
+
+  if type is_test_skipped &>/dev/null && { is_test_skipped "$raw_name" || is_test_skipped "$name"; }; then
+      echo "[SKIPPED][$juSUITE][$name] Test skipped by CLI option"
+      juASSERTS=`expr $juASSERTS + 1`
+      juASSERTS=`printf "%.2d" $juASSERTS`
+      juCONTENT="$juCONTENT
+    <testcase name=\"$name\" time=\"0\" classname=\"$juCLASSNAME\">
+        <skipped message=\"test skipped by CLI option\" />
+    </testcase>
+  "
+      juLogRefreshFile
+      return 0
+  fi
 
   # eval the command sending output to a file
   outf=/var/tmp/ju$$.txt

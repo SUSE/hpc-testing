@@ -157,17 +157,75 @@ load_helpers()
     done
 }
 
+parse_phases() {
+    local phase_opt="$1"
+    local phases=""
+    local old_ifs="$IFS"
+    IFS=','
+    for part in $phase_opt; do
+        if [[ "$part" =~ ^([0-9]+)-([0-9]+)$ ]]; then
+            local start="${BASH_REMATCH[1]}"
+            local end="${BASH_REMATCH[2]}"
+            for (( i=start; i<=end; i++ )); do
+                phases="$phases $i"
+            done
+        elif [[ "$part" =~ ^[0-9]+$ ]]; then
+            phases="$phases $part"
+        fi
+    done
+    IFS="$old_ifs"
+    echo $phases | tr -s ' ' | sed -e 's/^ //' -e 's/ $//'
+}
+
+is_phase_enabled() {
+    local phase=$1
+    for p in $PHASES; do
+        if [ "$p" == "$phase" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+is_test_skipped() {
+    local tname=$1
+    for pattern in "${SKIP_TESTS[@]}"; do
+        if [[ $tname == $pattern ]] || [[ $tname =~ $pattern ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+get_common_args() {
+    local args=""
+    if [ -n "$PHASE_OPT" ]; then
+        args="$args -p $PHASE_OPT"
+    fi
+    for skip in "${SKIP_TESTS[@]}"; do
+        args="$args --skip-test \"$skip\""
+    done
+    if [ "$VERBOSE" == "1" ]; then
+        args="$args -v"
+    fi
+    if [ "$IN_VM" == "1" ]; then
+        args="$args --in-vm"
+    fi
+    if [ -n "$juSUITE" ]; then
+        args="$args -S $juSUITE"
+    fi
+    if [ -n "$MPI_FLAVOURS" ]; then
+        args="$args -M $MPI_FLAVOURS"
+    fi
+    echo "$args"
+}
+
 run_phase(){
     local phase=$1
     local func=$2
     shift 2
     juLogSetClassName "phase.$phase.$(echo $* | tr 'A-Z' 'a-z' | tr ' '  '.')"
-    if [ $END_PHASE -lt $phase ]; then
-	# We reach passed the last phase
-	# exit now
-	exit 0
-    fi
-    if [ $START_PHASE -gt $phase -o $END_PHASE -lt $phase ]; then
+    if ! is_phase_enabled $phase; then
 	echo "Skipping phase $phase"
 	return 0
     else
@@ -197,40 +255,48 @@ get_suse_version(){
 #####################
 # Phase parsing stuff
 #####################
-DEFAULT_START_PHASE=0
-DEFAULT_END_PHASE=999
-
-export START_PHASE=${START_PHASE:-$DEFAULT_START_PHASE}
-export END_PHASE=${END_PHASE:-$DEFAULT_END_PHASE}
+export PHASE_OPT=""
 export IN_VM=0
 export HOST1=
 export HOST2=
+export SKIP_TESTS=()
 
 common_usage(){
     echo "  -h, --help                     Display usage"
-    echo "  -s, --start-phase              Phase to start from (default is $DEFAULT_START_PHASE)"
-    echo "  -e, --end-phase                Phase to stop at (default is $DEFAULT_END_PHASE)"
-    echo "  -p, --phase <#phase>           Launch only this phase"
+    echo "  -s, --start-phase <#phase>     Phase to start from"
+    echo "  -e, --end-phase <#phase>       Phase to stop at"
+    echo "  -p, --phase <#phase>           Launch only this phase (or phase list like 0,5,7-9)"
+    echo "      --skip-test <pattern>      Skip test matching the glob/regex pattern"
     echo "  -v, --verbose                  Display test logs in console."
     echo "      --in-vm                    Test is being run in a virtual machine"
     echo "  -S, --suite <name>             Set JUnit testsuite name"
     echo "  -M, --mpi <mpi>[,<mpi>...]     Comma separated list of MPI flavours to test"
-
 }
 
 common_parse(){
     case $1 in
 	-s|--start-phase)
-	    START_PHASE=$2
+	    if [[ "$PHASE_OPT" =~ ^([0-9]+)-([0-9]+)$ ]]; then
+	        PHASE_OPT="${2}-${BASH_REMATCH[2]}"
+	    else
+	        PHASE_OPT="${2}-999"
+	    fi
 	    return 2
 	    ;;
 	-e|--end-phase)
-	    END_PHASE=$2
+	    if [[ "$PHASE_OPT" =~ ^([0-9]+)-([0-9]+)$ ]]; then
+	        PHASE_OPT="${BASH_REMATCH[1]}-${2}"
+	    else
+	        PHASE_OPT="0-${2}"
+	    fi
 	    return 2
 	    ;;
 	-p|--phase)
-	    START_PHASE=$2
-	    END_PHASE=$2
+	    PHASE_OPT=$2
+	    return 2
+	    ;;
+	--skip-test)
+	    SKIP_TESTS+=("$2")
 	    return 2
 	    ;;
 	-v|--verbose)
@@ -275,4 +341,8 @@ common_check(){
 	usage $0
 	fatal_error "Missing host names"
     fi
+    if [ -z "$PHASE_OPT" ]; then
+        PHASE_OPT="0-999"
+    fi
+    PHASES=$(parse_phases "$PHASE_OPT")
 }
